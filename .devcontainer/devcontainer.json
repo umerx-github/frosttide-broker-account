@@ -1,0 +1,74 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
+{
+	"name": "FrostTide Deduplicator",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "yarn install",
+	// Configure tool-specific properties.
+	"runArgs": [
+		// "--env-file",
+		// ".env",
+		"--network=kafka_external"
+	],
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"workbench.colorTheme": "Default Dark+",
+				"workbench.startupEditor": "none",
+				"editor.formatOnSave": true,
+				"editor.formatOnType": true,
+				"editor.formatOnPaste": false,
+				"prettier.tabWidth": 4,
+				"prettier.useTabs": true,
+				"security.workspace.trust.untrustedFiles": "open",
+				"editor.inlineSuggest.enabled": true,
+				"git.autofetch": true,
+				"github.copilot.enable": {
+					"*": true,
+					"plaintext": false,
+					"markdown": true,
+					"scminput": false
+				},
+				"git.confirmSync": false,
+				"[dockerfile]": {
+					"editor.defaultFormatter": "ms-azuretools.vscode-docker"
+				},
+				"[javascript]": {
+					"editor.defaultFormatter": "vscode.typescript-language-features"
+				},
+				"[json]": {
+					"editor.defaultFormatter": "esbenp.prettier-vscode"
+				},
+				"[markdown]": {
+					"editor.defaultFormatter": "esbenp.prettier-vscode"
+				},
+				"[typescript]": {
+					"editor.defaultFormatter": "esbenp.prettier-vscode"
+				},
+				"[typescriptreact]": {
+					"editor.defaultFormatter": "esbenp.prettier-vscode"
+				},
+				"[yaml]": {
+					"editor.autoIndent": "advanced"
+				}
+			},
+			"extensions": [
+				"ms-azuretools.vscode-docker",
+				"EditorConfig.EditorConfig",
+				"esbenp.prettier-vscode",
+				"GitHub.copilot",
+				"GitHub.copilot-labs",
+				"github.vscode-github-actions",
+				"GitHub.vscode-pull-request-github"
+			]
+		}
+	}
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

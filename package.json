@@ -1,0 +1,45 @@
+{
+    "name": "finnhub-websocket-trades-event-processor",
+    "version": "1.0.0",
+    "type": "module",
+    "main": "index.js",
+    "scripts": {
+        "build": "tsc",
+        "dev": "nodemon --watch './src/*' -e ts,js --exec 'npm run build; npm run serve'",
+        "test": "mocha",
+        "serve": "node ./dist/index.js",
+        "prod": "node ./dist/index.js"
+    },
+    "devDependencies": {
+        "@types/chai": "^5.0.1",
+        "@types/mocha": "^10.0.10",
+        "@types/node": "^20.17.19",
+        "@types/sinon": "^17.0.4",
+        "@types/sinon-chai": "^4.0.0",
+        "@types/ws": "^8.5.14",
+        "chai": "^5.2.0",
+        "mocha": "^11.1.0",
+        "nodemon": "^2.0.22",
+        "sinon": "^19.0.2",
+        "sinon-chai": "^4.0.0",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.7.3"
+    },
+    "dependencies": {
+        "@umerx/kafkajs-client": "^4.0.1",
+        "@umerx/reconnecting-websocket": "^0.0.2",
+        "lmdb": "^3.2.6",
+        "zod": "^3.24.2"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/umerx-github/finnhub-websocket-trades-event-processor.git"
+    },
+    "author": "Missie Dawes",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/umerx-github/finnhub-websocket-trades-event-processor/issues"
+    },
+    "homepage": "https://github.com/umerx-github/finnhub-websocket-trades-event-processor#readme",
+    "description": ""
+}
