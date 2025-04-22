@@ -3,7 +3,10 @@
 {
 	"name": "FrostTide Deduplicator",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+	// "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+	"dockerComposeFile": ["docker-compose.yml"],
+	"workspaceFolder": "/workspace",
+	"initializeCommand": "docker network create kafka_external || echo 'Already exists'",
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -11,11 +14,6 @@
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "yarn install",
 	// Configure tool-specific properties.
-	"runArgs": [
-		// "--env-file",
-		// ".env",
-		"--network=kafka_external"
-	],
 	"customizations": {
 		"vscode": {
 			"settings": {

@@ -1,5 +1,5 @@
 {
-    "name": "finnhub-websocket-trades-event-processor",
+    "name": "frosttide-broker-account",
     "version": "1.0.0",
     "type": "module",
     "main": "index.js",
@@ -27,19 +27,20 @@
     },
     "dependencies": {
         "@umerx/kafkajs-client": "^4.0.1",
-        "@umerx/reconnecting-websocket": "^0.0.2",
+        "kysely": "^0.28.1",
         "lmdb": "^3.2.6",
+        "mysql2": "^3.14.0",
         "zod": "^3.24.2"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/umerx-github/finnhub-websocket-trades-event-processor.git"
+        "url": "git+https://github.com/umerx-github/frosttide-broker-account.git"
     },
     "author": "Missie Dawes",
     "license": "ISC",
     "bugs": {
-        "url": "https://github.com/umerx-github/finnhub-websocket-trades-event-processor/issues"
+        "url": "https://github.com/umerx-github/frosttide-broker-account/issues"
     },
-    "homepage": "https://github.com/umerx-github/finnhub-websocket-trades-event-processor#readme",
+    "homepage": "https://github.com/umerx-github/frosttide-broker-account#readme",
     "description": ""
 }

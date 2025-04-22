@@ -1,16 +1,15 @@
 import { z } from 'zod';
 
-export const inputMessageValueSchema = z.union([
-    z.object({
-        eventType: z.enum(['SubscribedToSymbol', 'UnsubscribedToSymbol']),
-        data: z.object({
-            symbol: z.string(),
-        }),
+export const inputMessageValueSchema = z.object({
+    eventType: z.enum([
+        'RequestedAccountList',
+        'RequestedAccountAdd',
+        'RequestedAccountUpdate',
+        'RequestedAccountDelete',
+    ]),
+    messageId: z.number().int().min(0),
+    lastReadVersionId: z.number().int().min(0),
+    data: z.object({
+        symbol: z.string(),
     }),
-    z.object({
-        eventType: z.literal('ReportedSubscribedSymbols'),
-        data: z.object({
-            symbols: z.array(z.string()),
-        }),
-    }),
-]);
+});
