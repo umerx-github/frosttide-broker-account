@@ -7,8 +7,9 @@
         "build": "tsc",
         "dev": "nodemon --watch './src/*' -e ts,js --exec 'npm run build; npm run serve'",
         "test": "mocha",
+        "migrate": "npm run build && node ./dist/scripts/migrate.js",
         "serve": "node ./dist/index.js",
-        "prod": "node ./dist/index.js"
+        "prod": "npm run serve"
     },
     "devDependencies": {
         "@types/chai": "^5.0.1",

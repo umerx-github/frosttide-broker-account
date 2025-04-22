@@ -13,6 +13,8 @@ services:
     command: sleep infinity
     volumes:
       - ./:/workspace
+    networks:
+      - frosttide_broker_account_internal_network
   db:
     image: mysql:latest
     restart: always

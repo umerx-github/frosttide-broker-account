@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { promises as fs } from 'fs';
 import {
     Migrator,
@@ -8,8 +9,11 @@ import {
 } from 'kysely';
 import { db } from '../connections/database.js';
 
-async function migrate(direction: 'up' | 'down') {
-    const migrationFolder = path.join('..', __dirname, '/migrations');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+async function migrate(direction: 'up' | 'down' = 'up') {
+    const migrationFolder = path.join(__dirname, '..', '/migrations');
     const migrator = new Migrator({
         db,
         provider: new FileMigrationProvider({
@@ -30,12 +34,26 @@ async function migrate(direction: 'up' | 'down') {
     }
 
     results?.forEach((it) => {
-        if (it.status === 'Success') {
-            console.log(
-                `migration "${it.migrationName}" was executed successfully`
-            );
-        } else if (it.status === 'Error') {
-            console.error(`failed to execute migration "${it.migrationName}"`);
+        switch (it.status) {
+            case 'Success':
+                console.log(
+                    `migration "${it.migrationName}" was successfully brought ${direction}`
+                );
+                break;
+            case 'Error':
+                console.error(
+                    `failed to bring "${it.migrationName}" ${direction}`
+                );
+                break;
+            case 'NotExecuted':
+                console.log(
+                    `did not execute "${it.migrationName}" ${direction}`
+                );
+                break;
+            default:
+                console.error(
+                    `encountered unknown migration status when trying to bring "${it.migrationName}" ${direction}`
+                );
         }
     });
 
