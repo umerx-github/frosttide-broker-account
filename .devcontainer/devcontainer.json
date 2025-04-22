@@ -4,7 +4,8 @@
 	"name": "FrostTide Deduplicator",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	// "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
-	"dockerComposeFile": ["docker-compose.yml"],
+	"dockerComposeFile": ["../docker-compose.yml"],
+	"service": "frosttide_broker_account",
 	"workspaceFolder": "/workspace",
 	"initializeCommand": "docker network create kafka_external || echo 'Already exists'",
 	// Features to add to the dev container. More info: https://containers.dev/features.
