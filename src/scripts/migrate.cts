@@ -1,5 +1,4 @@
 import * as path from 'path';
-import { fileURLToPath } from 'url';
 import { promises as fs } from 'fs';
 import {
     Migrator,
@@ -7,10 +6,7 @@ import {
     NO_MIGRATIONS,
     MigrationResult,
 } from 'kysely';
-import { db } from '../connections/database.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { db } from '../connections/database.cjs';
 
 async function migrate(direction: 'up' | 'down' = 'up') {
     const migrationFolder = path.join(__dirname, '..', '/migrations');
