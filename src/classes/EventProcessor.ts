@@ -2,36 +2,23 @@ import EventProcessorProducerLike from '../interfaces/EventProcessorProducerLike
 import EventProcessorConsumerLike from '../interfaces/EventProcessorConsumerLike.js';
 import { inputMessageValueSchema } from '../schemas/inputMessageValueSchema.js';
 import { inputSchema } from '../schemas/inputSchema.js';
+import { Kysely } from 'kysely';
+import { createAccountAlpaca } from '../models/alpacaAccountTable.js';
+import { Database } from '../interfaces/Database.js';
+import { requestedAccountAddSchema } from '../schemas/requestedAccountAddSchema.js';
 
-export enum TransactionFlags {
-    /* Indicates that the transaction needs to be abortable */
-    ABORTABLE = 1,
-    /* Indicates that the transaction needs to be committed before returning */
-    SYNCHRONOUS_COMMIT = 2,
-    /* Indicates that the function can return before the transaction has been flushed to disk */
-    NO_SYNC_FLUSH = 0x10000,
-}
-
-interface Storable<V = any, K extends Key = Key> {
-    transaction<T>(action: () => T): Promise<T>;
-    get(id: K): V | undefined;
-    put(id: K, value: V): Promise<boolean>;
-    transactionSync<T>(action: () => T, flags?: TransactionFlags): T;
-}
-type Key = Key[] | string | symbol | number | boolean | Uint8Array;
-
-interface EventProcessorProps {
-    db: Storable;
+interface EventProcessorProps<DatabaseType> {
+    db: Kysely<DatabaseType>;
     producer: EventProcessorProducerLike;
     consumer: EventProcessorConsumerLike;
 }
 
 export default class EventProcessor {
-    private db: Storable;
+    private db: Kysely<Database>;
     private producer: EventProcessorProducerLike;
     private consumer: EventProcessorConsumerLike;
 
-    constructor({ db, producer, consumer }: EventProcessorProps) {
+    constructor({ db, producer, consumer }: EventProcessorProps<Database>) {
         this.db = db;
         this.producer = producer;
         this.consumer = consumer;
@@ -47,20 +34,34 @@ export default class EventProcessor {
             return;
         }
 
-        const value = inputMessageValueSchema.safeParse(
+        const validInputMessageValue = inputMessageValueSchema.safeParse(
             JSON.parse(message.value?.toString() || '')
         );
 
-        if (!value.success) {
-            console.error('Invalid message:', value.error);
+        if (!validInputMessageValue.success) {
+            console.error('Invalid message:', validInputMessageValue.error);
             return;
         }
 
-        const validMessage = value.data;
+        const validInputMessageValueData = validInputMessageValue.data;
 
-        switch (validMessage.eventType) {
+        switch (validInputMessageValueData.eventType) {
+            case 'RequestedAccountAdd':
+                await this.db
+                    .transaction()
+                    .setIsolationLevel('serializable')
+                    .execute(async (trx) => {
+                        await createAccountAlpaca(trx, {
+                            platformAccountId:
+                                validInputMessageValueData.data
+                                    .platformAccountId,
+                            platformAPIKey:
+                                validInputMessageValueData.data.platformAPIKey,
+                        });
+                    });
+                break;
             default:
-                console.error('Invalid message:', validMessage);
+                console.error('Invalid message:', validInputMessageValueData);
         }
     }
 }
