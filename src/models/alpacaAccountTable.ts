@@ -23,12 +23,9 @@ export async function createAccountAlpaca(
             ...accountAlpaca,
         })
         .executeTakeFirstOrThrow();
-    const accountAlpacaResult = await findAccountAlpacaById(
-        trx,
-        Number(insertId)
-    );
-    if (accountAlpacaResult === undefined) {
-        throw new Error('Failed to create stream out');
+    const result = await findAccountAlpacaById(trx, Number(insertId));
+    if (result === undefined) {
+        throw new Error('Failed to create AccountAlpaca');
     }
-    return accountAlpacaResult;
+    return result;
 }

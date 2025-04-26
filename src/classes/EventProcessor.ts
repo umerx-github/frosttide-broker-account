@@ -4,8 +4,10 @@ import { inputMessageValueSchema } from '../schemas/inputMessageValueSchema.js';
 import { inputSchema } from '../schemas/inputSchema.js';
 import { Kysely } from 'kysely';
 import { createAccountAlpaca } from '../models/alpacaAccountTable.js';
-import { Database } from '../interfaces/Database.js';
-import { requestedAccountAddSchema } from '../schemas/requestedAccountAddSchema.js';
+import { AccountAlpaca, Database } from '../interfaces/Database.js';
+import { findResourceByName, upsertResource } from '../models/resourceTable.js';
+import { BTree } from '@umerx/btreejs';
+import { btreeSchema } from '../schemas/btree.js';
 
 interface EventProcessorProps<DatabaseType> {
     db: Kysely<DatabaseType>;
@@ -47,18 +49,81 @@ export default class EventProcessor {
 
         switch (validInputMessageValueData.eventType) {
             case 'RequestedAccountAdd':
-                await this.db
-                    .transaction()
-                    .setIsolationLevel('serializable')
-                    .execute(async (trx) => {
-                        await createAccountAlpaca(trx, {
-                            platformAccountId:
-                                validInputMessageValueData.data
-                                    .platformAccountId,
-                            platformAPIKey:
-                                validInputMessageValueData.data.platformAPIKey,
+                let dbResourceEntityResponse: AccountAlpaca | undefined;
+                try {
+                    await this.db
+                        .transaction()
+                        .setIsolationLevel('serializable')
+                        .execute(async (trx) => {
+                            const dbResourceResponse = await findResourceByName(
+                                trx,
+                                'AlpacaAccount'
+                            );
+                            if (
+                                undefined !== dbResourceResponse?.versionId &&
+                                dbResourceResponse.versionId >
+                                    validInputMessageValueData.lastReadVersionId
+                            ) {
+                                throw new Error(
+                                    `Existing Resource versionId ${dbResourceResponse?.versionId} > message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`
+                                );
+                            }
+                            const versionId =
+                                undefined === dbResourceResponse?.versionId
+                                    ? 0
+                                    : dbResourceResponse.versionId + 1;
+                            const proofOfInclusionBTreeSerialized =
+                                undefined ===
+                                dbResourceResponse?.proofOfInclusionBTreeSerialized
+                                    ? new BTree(3)
+                                    : BTree.fromJSON(
+                                          btreeSchema.parse(
+                                              JSON.parse(
+                                                  dbResourceResponse.proofOfInclusionBTreeSerialized
+                                              )
+                                          )
+                                      );
+                            proofOfInclusionBTreeSerialized.insert(
+                                validInputMessageValueData.messageId
+                            );
+                            dbResourceEntityResponse =
+                                await createAccountAlpaca(trx, {
+                                    platformAccountId:
+                                        validInputMessageValueData.data
+                                            .platformAccountId,
+                                    platformAPIKey:
+                                        validInputMessageValueData.data
+                                            .platformAPIKey,
+                                });
+                            await upsertResource(trx, {
+                                name: 'AlpacaAccount',
+                                versionId,
+                                proofOfInclusionBTreeSerialized: JSON.stringify(
+                                    proofOfInclusionBTreeSerialized
+                                ),
+                            });
                         });
-                    });
+                } finally {
+                    if (dbResourceEntityResponse) {
+                        await this.producer.sendMessage({
+                            key: 'myKey',
+                            value: JSON.stringify({
+                                eventType: 'AcknowledgedAccountList',
+                                data: dbResourceEntityResponse,
+                            }),
+                        });
+                    } else {
+                        await this.producer.sendMessage({
+                            key: 'myKey',
+                            value: JSON.stringify({
+                                eventType: 'RejectedAccountList',
+                                data: {
+                                    message,
+                                },
+                            }),
+                        });
+                    }
+                }
                 break;
             default:
                 console.error('Invalid message:', validInputMessageValueData);

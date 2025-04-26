@@ -11,7 +11,7 @@ const dialect = new MysqlDialect({
         password: env.DB_PASSWORD,
         port: 3306,
         connectionLimit: 10,
-        jsonStrings: false,
+        jsonStrings: true,
     }),
 });
 

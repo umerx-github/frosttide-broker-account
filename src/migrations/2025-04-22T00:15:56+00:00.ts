@@ -4,7 +4,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
         .createTable('AlpacaAccount')
         .ifNotExists()
-        .addColumn('id', 'integer', (col) => col.primaryKey().autoIncrement())
+        .addColumn('id', 'bigint', (col) => col.primaryKey().autoIncrement())
         .addColumn('platformAccountId', 'text', (col) => col.notNull())
         .addColumn('platformAPIKey', 'text', (col) => col.notNull())
         .execute();

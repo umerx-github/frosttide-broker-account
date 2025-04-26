@@ -6,7 +6,9 @@
     "scripts": {
         "build": "tsc",
         "test": "mocha",
+        "migrate:make": "cp ./dev/templates/migration.ts ./src/migrations/$(date -Iseconds).ts",
         "migrate": "node ./dist/scripts/migrate.js",
+        "migrate:dev": "rm -rf ./dist/migrations/* && npm run build && node ./dist/scripts/migrate.js",
         "serve": "node ./dist/index.js",
         "dev": "nodemon --watch './src/*' -e ts,js --exec 'npm run build; npm run migrate; npm run serve'",
         "prod": "npm run migrate && npm run serve"
@@ -27,6 +29,7 @@
         "typescript": "^5.7.3"
     },
     "dependencies": {
+        "@umerx/btreejs": "^2.0.0",
         "@umerx/kafkajs-client": "^4.0.1",
         "kysely": "^0.28.1",
         "lmdb": "^3.2.6",
