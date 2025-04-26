@@ -32,11 +32,16 @@ export async function upsertLock(trx: Transaction<Database>, lock: NewLock) {
         .selectAll()
         .executeTakeFirst();
     if (existingLock) {
-        return trx
+        const { numUpdatedRows } = await trx
             .updateTable('Lock')
             .set({ ...lock })
             .where('name', '=', lock.name)
             .executeTakeFirstOrThrow();
+        const result = await findLockByName(trx, lock.name);
+        if (result === undefined) {
+            throw new Error('Failed to update AccountAlpaca');
+        }
+        return result;
     } else {
         return createLock(trx, lock);
     }

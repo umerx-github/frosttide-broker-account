@@ -2,6 +2,10 @@ import { Transaction } from 'kysely';
 import { Database } from '../interfaces/Database.js';
 import { NewAccountAlpaca } from '../interfaces/Database.js';
 
+export async function listAccountAlpaca(trx: Transaction<Database>) {
+    return trx.selectFrom('AccountAlpaca').selectAll().execute();
+}
+
 export async function findAccountAlpacaById(
     trx: Transaction<Database>,
     id: number

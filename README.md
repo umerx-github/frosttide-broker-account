@@ -1,45 +1,63 @@
 # Finnhub Websocket Trades Event Processor
 
--   AAPL
--   BINANCE:BTCUSDT
--   BINANCE:DOGEUSDT
+## Events
+
+### RequestedAccountList
+
+#### Request
 
 ```
 {
-	"eventType": "SubscribedToSymbol",
-	"data": {
-		"symbol": "AAPL"
-	}
+	"eventType": "RequestedAccountList",
+	"messageId": 0
 }
+```
 
-{
-	"eventType": "UnsubscribedToSymbol",
-	"data": {
-		"symbol": "AAPL"
-	}
-}
+#### Response
 
-{
-	"eventType": "SubscribedToSymbol",
-	"data": {
-		"symbol": "BINANCE:BTCUSDT"
-	}
-}
+##### AcknowledgedAccountList
 
-{
-	"eventType": "UnsubscribedToSymbol",
-	"data": {
-		"symbol": "BINANCE:BTCUSDT"
-	}
-}
+##### RejectedAccountList
 
+### RequestedAccountAdd
+
+#### Request
+
+```
 {
-	"eventType": "ReportedSubscribedSymbols",
+	"eventType": "RequestedAccountAdd",
+	"messageId": 0,
+	"lastReadVersionId": null,
 	"data": {
-		"symbols": [
-			"AAPL",
-			"BINANCE:BTCUSDT"
-		]
+		"platform": "Alpaca",
+		"platformAccountId": "abc123",
+		"platformAPIKey": "xyz321"
 	}
 }
 ```
+
+#### Response
+
+##### AcknowledgedAccountAdd
+
+##### RejectedAccountAdd
+
+### RequestedAccountUpdate
+
+#### Request
+
+#### Response
+
+##### AcknowledgedAccountUpdate
+
+##### RejectedAccountUpdate
+
+### RequestedAccountDelete
+
+#### Request
+
+#### Response
+
+##### AcknowledgedAccountDelete
+
+##### RejectedAccountDelete

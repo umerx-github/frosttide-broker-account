@@ -3,8 +3,12 @@ import EventProcessorConsumerLike from '../interfaces/EventProcessorConsumerLike
 import { inputMessageValueSchema } from '../schemas/inputMessageValueSchema.js';
 import { inputSchema } from '../schemas/inputSchema.js';
 import { Kysely } from 'kysely';
-import { createAccountAlpaca } from '../models/alpacaAccountTable.js';
-import { AccountAlpaca, Database } from '../interfaces/Database.js';
+import {
+    createAccountAlpaca,
+    findAccountAlpacaById,
+    listAccountAlpaca,
+} from '../models/alpacaAccountTable.js';
+import { AccountAlpaca, Database, Lock } from '../interfaces/Database.js';
 import { findLockByName, upsertLock } from '../models/lockTable.js';
 import { BTree } from '@umerx/btreejs';
 import { btreeSchema } from '../schemas/btree.js';
@@ -48,70 +52,22 @@ export default class EventProcessor {
         const validInputMessageValueData = validInputMessageValue.data;
 
         switch (validInputMessageValueData.eventType) {
-            case 'RequestedAccountAdd':
-                let dbLockEntityResponse: AccountAlpaca | undefined;
+            case 'RequestedAccountList': {
+                let dbObject: AccountAlpaca[] | undefined;
                 try {
                     await this.db
                         .transaction()
                         .setIsolationLevel('serializable')
                         .execute(async (trx) => {
-                            const dbLockResponse = await findLockByName(
-                                trx,
-                                'AlpacaAccount'
-                            );
-                            if (
-                                undefined !== dbLockResponse?.versionId &&
-                                dbLockResponse.versionId >
-                                    validInputMessageValueData.lastReadVersionId
-                            ) {
-                                throw new Error(
-                                    `Existing Lock versionId ${dbLockResponse?.versionId} > message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`
-                                );
-                            }
-                            const versionId =
-                                undefined === dbLockResponse?.versionId
-                                    ? 0
-                                    : dbLockResponse.versionId + 1;
-                            const proofOfInclusionBTreeSerialized =
-                                undefined ===
-                                dbLockResponse?.proofOfInclusionBTreeSerialized
-                                    ? new BTree(3)
-                                    : BTree.fromJSON(
-                                          btreeSchema.parse(
-                                              JSON.parse(
-                                                  dbLockResponse.proofOfInclusionBTreeSerialized
-                                              )
-                                          )
-                                      );
-                            proofOfInclusionBTreeSerialized.insert(
-                                validInputMessageValueData.messageId
-                            );
-                            dbLockEntityResponse = await createAccountAlpaca(
-                                trx,
-                                {
-                                    platformAccountId:
-                                        validInputMessageValueData.data
-                                            .platformAccountId,
-                                    platformAPIKey:
-                                        validInputMessageValueData.data
-                                            .platformAPIKey,
-                                }
-                            );
-                            await upsertLock(trx, {
-                                name: 'AlpacaAccount',
-                                versionId,
-                                proofOfInclusionBTreeSerialized: JSON.stringify(
-                                    proofOfInclusionBTreeSerialized
-                                ),
-                            });
+                            dbObject = await listAccountAlpaca(trx);
                         });
                 } finally {
-                    if (dbLockEntityResponse) {
+                    if (dbObject) {
                         await this.producer.sendMessage({
                             key: 'myKey',
                             value: JSON.stringify({
                                 eventType: 'AcknowledgedAccountList',
-                                data: dbLockEntityResponse,
+                                data: dbObject,
                             }),
                         });
                     } else {
@@ -127,8 +83,114 @@ export default class EventProcessor {
                     }
                 }
                 break;
-            default:
-                console.error('Invalid message:', validInputMessageValueData);
+            }
+            case 'RequestedAccountAdd': {
+                let lockObject: Lock | undefined;
+                let dbObject: AccountAlpaca | undefined;
+                try {
+                    await this.db
+                        .transaction()
+                        .setIsolationLevel('serializable')
+                        .execute(async (trx) => {
+                            lockObject = await findLockByName(
+                                trx,
+                                'RequestedAccountAdd'
+                            );
+                            if (
+                                !(
+                                    (undefined === lockObject?.versionId &&
+                                        null ===
+                                            validInputMessageValueData.lastReadVersionId) ||
+                                    (lockObject?.versionId !== undefined &&
+                                        lockObject.versionId ===
+                                            validInputMessageValueData.lastReadVersionId)
+                                )
+                            ) {
+                                throw new Error(
+                                    `Existing Lock versionId ${lockObject?.versionId} > message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`
+                                );
+                            }
+                            const versionId =
+                                undefined === lockObject?.versionId
+                                    ? 0
+                                    : lockObject.versionId + 1;
+                            const proofOfInclusionBTreeSerialized =
+                                undefined ===
+                                lockObject?.proofOfInclusionBTreeSerialized
+                                    ? new BTree(3)
+                                    : BTree.fromJSON(
+                                          btreeSchema.parse(
+                                              JSON.parse(
+                                                  lockObject.proofOfInclusionBTreeSerialized
+                                              )
+                                          )
+                                      );
+                            proofOfInclusionBTreeSerialized.insert(
+                                validInputMessageValueData.messageId
+                            );
+                            dbObject = await createAccountAlpaca(trx, {
+                                platformAccountId:
+                                    validInputMessageValueData.data
+                                        .platformAccountId,
+                                platformAPIKey:
+                                    validInputMessageValueData.data
+                                        .platformAPIKey,
+                            });
+                            lockObject = await upsertLock(trx, {
+                                name: 'RequestedAccountAdd',
+                                versionId,
+                                proofOfInclusionBTreeSerialized: JSON.stringify(
+                                    proofOfInclusionBTreeSerialized
+                                ),
+                            });
+                        });
+                } finally {
+                    if (dbObject && lockObject) {
+                        await this.producer.sendMessage({
+                            key: 'myKey',
+                            value: JSON.stringify({
+                                eventType: 'AcknowledgedAccountAdd',
+                                versionId: lockObject.versionId,
+                                proofOfInclusionBTreeSerialized:
+                                    lockObject.proofOfInclusionBTreeSerialized,
+                                data: dbObject,
+                            }),
+                        });
+                    } else if (lockObject) {
+                        await this.producer.sendMessage({
+                            key: 'myKey',
+                            value: JSON.stringify({
+                                eventType: 'RejectedAccountAdd',
+                                versionId: lockObject.versionId,
+                                proofOfInclusionBTreeSerialized:
+                                    lockObject.proofOfInclusionBTreeSerialized,
+                                data: {
+                                    message,
+                                },
+                            }),
+                        });
+                    } else {
+                        await this.producer.sendMessage({
+                            key: 'myKey',
+                            value: JSON.stringify({
+                                eventType: 'RejectedAccountAdd',
+                                versionId: null,
+                                proofOfInclusionBTreeSerialized: null,
+                                data: {
+                                    message,
+                                },
+                            }),
+                        });
+                    }
+                }
+                break;
+            }
+            default: {
+                console.error(
+                    'Unhandled event type:',
+                    validInputMessageValueData
+                );
+            }
         }
     }
 }

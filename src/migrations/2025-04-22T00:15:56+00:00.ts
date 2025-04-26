@@ -2,7 +2,7 @@ import { Kysely } from 'kysely';
 
 export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
-        .createTable('AlpacaAccount')
+        .createTable('AccountAlpaca')
         .ifNotExists()
         .addColumn('id', 'bigint', (col) => col.primaryKey().autoIncrement())
         .addColumn('platformAccountId', 'text', (col) => col.notNull())
@@ -11,5 +11,5 @@ export async function up(db: Kysely<any>): Promise<void> {
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-    await db.schema.dropTable('AlpacaAccount').ifExists().execute();
+    await db.schema.dropTable('AccountAlpaca').ifExists().execute();
 }

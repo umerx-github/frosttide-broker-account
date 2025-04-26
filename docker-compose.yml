@@ -14,6 +14,7 @@ services:
     volumes:
       - ./:/workspace
     networks:
+      - kafka_external_network
       - frosttide_broker_account_internal_network
   db:
     image: mysql:latest
