@@ -8,6 +8,7 @@ import {
 import EventProcessor from './classes/EventProcessor.js';
 import { DatabaseAdapter } from './classes/DatabaseAdapter.js';
 import { open } from 'lmdb';
+import { db } from './connections/database.js';
 
 const producer = new ReconnectingProducerAdapter({
     producer: new Producer({
@@ -70,7 +71,7 @@ const consumer = new IdempotentConsumerAdapter(
 );
 
 const eventProcessor = new EventProcessor({
-    db: keyValueDb,
-    producer: producer,
-    consumer: consumer,
+    db,
+    producer,
+    consumer,
 });
