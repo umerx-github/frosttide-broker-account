@@ -2,18 +2,18 @@ import { Generated, Insertable, Selectable, Updateable } from 'kysely';
 
 export interface Database {
     AccountAlpaca: AccountAlpacaTable;
-    Resource: ResourceTable;
+    Lock: LockTable;
 }
 
-export interface ResourceTable {
+export interface LockTable {
     name: string;
     versionId: number;
     proofOfInclusionBTreeSerialized: string;
 }
 
-export type Resource = Selectable<ResourceTable>;
-export type NewResource = Insertable<ResourceTable>;
-export type ResourceUpdate = Updateable<ResourceTable>;
+export type Lock = Selectable<LockTable>;
+export type NewLock = Insertable<LockTable>;
+export type LockUpdate = Updateable<LockTable>;
 
 // This interface describes the `person` table to Kysely. Table
 // interfaces should only be used in the `Database` type above

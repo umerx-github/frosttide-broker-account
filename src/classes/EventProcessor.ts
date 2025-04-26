@@ -5,7 +5,7 @@ import { inputSchema } from '../schemas/inputSchema.js';
 import { Kysely } from 'kysely';
 import { createAccountAlpaca } from '../models/alpacaAccountTable.js';
 import { AccountAlpaca, Database } from '../interfaces/Database.js';
-import { findResourceByName, upsertResource } from '../models/resourceTable.js';
+import { findLockByName, upsertLock } from '../models/lockTable.js';
 import { BTree } from '@umerx/btreejs';
 import { btreeSchema } from '../schemas/btree.js';
 
@@ -49,53 +49,55 @@ export default class EventProcessor {
 
         switch (validInputMessageValueData.eventType) {
             case 'RequestedAccountAdd':
-                let dbResourceEntityResponse: AccountAlpaca | undefined;
+                let dbLockEntityResponse: AccountAlpaca | undefined;
                 try {
                     await this.db
                         .transaction()
                         .setIsolationLevel('serializable')
                         .execute(async (trx) => {
-                            const dbResourceResponse = await findResourceByName(
+                            const dbLockResponse = await findLockByName(
                                 trx,
                                 'AlpacaAccount'
                             );
                             if (
-                                undefined !== dbResourceResponse?.versionId &&
-                                dbResourceResponse.versionId >
+                                undefined !== dbLockResponse?.versionId &&
+                                dbLockResponse.versionId >
                                     validInputMessageValueData.lastReadVersionId
                             ) {
                                 throw new Error(
-                                    `Existing Resource versionId ${dbResourceResponse?.versionId} > message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`
+                                    `Existing Lock versionId ${dbLockResponse?.versionId} > message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`
                                 );
                             }
                             const versionId =
-                                undefined === dbResourceResponse?.versionId
+                                undefined === dbLockResponse?.versionId
                                     ? 0
-                                    : dbResourceResponse.versionId + 1;
+                                    : dbLockResponse.versionId + 1;
                             const proofOfInclusionBTreeSerialized =
                                 undefined ===
-                                dbResourceResponse?.proofOfInclusionBTreeSerialized
+                                dbLockResponse?.proofOfInclusionBTreeSerialized
                                     ? new BTree(3)
                                     : BTree.fromJSON(
                                           btreeSchema.parse(
                                               JSON.parse(
-                                                  dbResourceResponse.proofOfInclusionBTreeSerialized
+                                                  dbLockResponse.proofOfInclusionBTreeSerialized
                                               )
                                           )
                                       );
                             proofOfInclusionBTreeSerialized.insert(
                                 validInputMessageValueData.messageId
                             );
-                            dbResourceEntityResponse =
-                                await createAccountAlpaca(trx, {
+                            dbLockEntityResponse = await createAccountAlpaca(
+                                trx,
+                                {
                                     platformAccountId:
                                         validInputMessageValueData.data
                                             .platformAccountId,
                                     platformAPIKey:
                                         validInputMessageValueData.data
                                             .platformAPIKey,
-                                });
-                            await upsertResource(trx, {
+                                }
+                            );
+                            await upsertLock(trx, {
                                 name: 'AlpacaAccount',
                                 versionId,
                                 proofOfInclusionBTreeSerialized: JSON.stringify(
@@ -104,12 +106,12 @@ export default class EventProcessor {
                             });
                         });
                 } finally {
-                    if (dbResourceEntityResponse) {
+                    if (dbLockEntityResponse) {
                         await this.producer.sendMessage({
                             key: 'myKey',
                             value: JSON.stringify({
                                 eventType: 'AcknowledgedAccountList',
-                                data: dbResourceEntityResponse,
+                                data: dbLockEntityResponse,
                             }),
                         });
                     } else {
