@@ -4,7 +4,6 @@ import { requestedAccountAddSchema } from './requestedAccountAddSchema.js';
 export const inputMessageValueSchema = z.union([
     z.object({
         eventType: z.enum(['RequestedAccountList']),
-        messageId: z.number().int().min(0),
     }),
     z.object({
         eventType: z.enum(['RequestedAccountAdd']),

@@ -8,8 +8,7 @@
 
 ```
 {
-	"eventType": "RequestedAccountList",
-	"messageId": 0
+	"eventType": "RequestedAccountList"
 }
 ```
 

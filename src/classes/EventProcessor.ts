@@ -5,13 +5,13 @@ import { inputSchema } from '../schemas/inputSchema.js';
 import { Kysely } from 'kysely';
 import {
     createAccountAlpaca,
-    findAccountAlpacaById,
     listAccountAlpaca,
 } from '../models/alpacaAccountTable.js';
 import { AccountAlpaca, Database, Lock } from '../interfaces/Database.js';
 import { findLockByName, upsertLock } from '../models/lockTable.js';
 import { BTree } from '@umerx/btreejs';
 import { btreeSchema } from '../schemas/btree.js';
+import StaleWrite from '../exceptions/staleWrite.js';
 
 interface EventProcessorProps<DatabaseType> {
     db: Kysely<DatabaseType>;
@@ -53,41 +53,36 @@ export default class EventProcessor {
 
         switch (validInputMessageValueData.eventType) {
             case 'RequestedAccountList': {
-                let dbObject: AccountAlpaca[] | undefined;
                 try {
+                    let dbObject: AccountAlpaca[] | undefined;
                     await this.db
                         .transaction()
                         .setIsolationLevel('serializable')
                         .execute(async (trx) => {
                             dbObject = await listAccountAlpaca(trx);
                         });
-                } finally {
-                    if (dbObject) {
-                        await this.producer.sendMessage({
-                            key: 'myKey',
-                            value: JSON.stringify({
-                                eventType: 'AcknowledgedAccountList',
-                                data: dbObject,
-                            }),
-                        });
-                    } else {
-                        await this.producer.sendMessage({
-                            key: 'myKey',
-                            value: JSON.stringify({
-                                eventType: 'RejectedAccountList',
-                                data: {
-                                    message,
-                                },
-                            }),
-                        });
-                    }
+                    await this.producer.sendMessage({
+                        key: 'myKey',
+                        value: JSON.stringify({
+                            eventType: 'AcknowledgedAccountList',
+                            data: dbObject,
+                        }),
+                    });
+                } catch (e) {
+                    await this.producer.sendMessage({
+                        key: 'myKey',
+                        value: JSON.stringify({
+                            eventType: 'RejectedAccountList',
+                            data: validInputMessageValueData,
+                        }),
+                    });
                 }
                 break;
             }
             case 'RequestedAccountAdd': {
-                let lockObject: Lock | undefined;
-                let dbObject: AccountAlpaca | undefined;
                 try {
+                    let lockObject: Lock | undefined;
+                    let dbObject: AccountAlpaca | undefined;
                     await this.db
                         .transaction()
                         .setIsolationLevel('serializable')
@@ -96,28 +91,12 @@ export default class EventProcessor {
                                 trx,
                                 'RequestedAccountAdd'
                             );
-                            if (
-                                !(
-                                    (undefined === lockObject?.versionId &&
-                                        null ===
-                                            validInputMessageValueData.lastReadVersionId) ||
-                                    (lockObject?.versionId !== undefined &&
-                                        lockObject.versionId ===
-                                            validInputMessageValueData.lastReadVersionId)
-                                )
-                            ) {
-                                throw new Error(
-                                    `Existing Lock versionId ${lockObject?.versionId} > message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`
-                                );
-                            }
-                            const versionId =
-                                undefined === lockObject?.versionId
-                                    ? 0
-                                    : lockObject.versionId + 1;
-                            const proofOfInclusionBTreeSerialized =
+                            const existingVersionId =
+                                lockObject?.versionId ?? null;
+                            const existingProofOfInclusionBTree =
                                 undefined ===
                                 lockObject?.proofOfInclusionBTreeSerialized
-                                    ? new BTree(3)
+                                    ? null
                                     : BTree.fromJSON(
                                           btreeSchema.parse(
                                               JSON.parse(
@@ -125,6 +104,30 @@ export default class EventProcessor {
                                               )
                                           )
                                       );
+                            if (
+                                existingVersionId !==
+                                validInputMessageValueData.lastReadVersionId
+                            ) {
+                                throw new StaleWrite(
+                                    `Existing Lock versionId ${lockObject?.versionId} > message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`,
+                                    {
+                                        name: 'RequestedAccountAdd',
+                                        versionId: existingVersionId,
+                                        proofOfInclusionBTreeSerialized:
+                                            existingProofOfInclusionBTree
+                                                ? JSON.stringify(
+                                                      existingProofOfInclusionBTree
+                                                  )
+                                                : null,
+                                    }
+                                );
+                            }
+                            const versionId =
+                                null === existingVersionId
+                                    ? 0
+                                    : existingVersionId + 1;
+                            const proofOfInclusionBTreeSerialized =
+                                existingProofOfInclusionBTree ?? new BTree(3);
                             proofOfInclusionBTreeSerialized.insert(
                                 validInputMessageValueData.messageId
                             );
@@ -144,29 +147,29 @@ export default class EventProcessor {
                                 ),
                             });
                         });
-                } finally {
-                    if (dbObject && lockObject) {
-                        await this.producer.sendMessage({
-                            key: 'myKey',
-                            value: JSON.stringify({
-                                eventType: 'AcknowledgedAccountAdd',
-                                versionId: lockObject.versionId,
-                                proofOfInclusionBTreeSerialized:
-                                    lockObject.proofOfInclusionBTreeSerialized,
-                                data: dbObject,
-                            }),
-                        });
-                    } else if (lockObject) {
+                    if (undefined === dbObject || undefined === lockObject) {
+                        throw new Error(`dbObject or lockObject are undefined`);
+                    }
+                    await this.producer.sendMessage({
+                        key: 'myKey',
+                        value: JSON.stringify({
+                            eventType: 'AcknowledgedAccountAdd',
+                            versionId: lockObject.versionId,
+                            proofOfInclusionBTreeSerialized:
+                                lockObject.proofOfInclusionBTreeSerialized,
+                            data: dbObject,
+                        }),
+                    });
+                } catch (e) {
+                    if (e instanceof StaleWrite) {
                         await this.producer.sendMessage({
                             key: 'myKey',
                             value: JSON.stringify({
                                 eventType: 'RejectedAccountAdd',
-                                versionId: lockObject.versionId,
+                                versionId: e.lock.versionId,
                                 proofOfInclusionBTreeSerialized:
-                                    lockObject.proofOfInclusionBTreeSerialized,
-                                data: {
-                                    message,
-                                },
+                                    e.lock.proofOfInclusionBTreeSerialized,
+                                data: validInputMessageValueData,
                             }),
                         });
                     } else {
@@ -176,9 +179,7 @@ export default class EventProcessor {
                                 eventType: 'RejectedAccountAdd',
                                 versionId: null,
                                 proofOfInclusionBTreeSerialized: null,
-                                data: {
-                                    message,
-                                },
+                                data: validInputMessageValueData,
                             }),
                         });
                     }
