@@ -7,6 +7,10 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn('id', 'bigint', (col) => col.primaryKey().autoIncrement())
         .addColumn('platformAccountId', 'text', (col) => col.notNull())
         .addColumn('platformAPIKey', 'text', (col) => col.notNull())
+        .addColumn('versionId', 'bigint')
+        .addColumn('proofOfInclusionBTreeSerialized', 'text', (col) =>
+            col.notNull()
+        )
         .execute();
 }
 

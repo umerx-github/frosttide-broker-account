@@ -23,6 +23,8 @@ export interface AccountAlpacaTable {
     id: Generated<number>;
     platformAccountId: string;
     platformAPIKey: string;
+    versionId: number;
+    proofOfInclusionBTreeSerialized: string;
 }
 
 export type AccountAlpaca = Selectable<AccountAlpacaTable>;

@@ -72,6 +72,7 @@ export default class EventProcessor {
                         }),
                     });
                 } catch (e) {
+                    console.error({ e });
                     await this.producer.sendMessage({
                         key: 'myKey',
                         value: JSON.stringify({
@@ -96,19 +97,6 @@ export default class EventProcessor {
                                 trx,
                                 'RequestedAccountAdd'
                             );
-                            const existingVersionId =
-                                lockObject?.versionId ?? null;
-                            const existingProofOfInclusionBTree =
-                                undefined ===
-                                lockObject?.proofOfInclusionBTreeSerialized
-                                    ? null
-                                    : BTree.fromJSON(
-                                          btreeSchema.parse(
-                                              JSON.parse(
-                                                  lockObject.proofOfInclusionBTreeSerialized
-                                              )
-                                          )
-                                      );
                         });
                     if (undefined === lockObject) {
                         throw new Error(`lockObject is undefined`);
@@ -127,7 +115,8 @@ export default class EventProcessor {
                             },
                         }),
                     });
-                } catch {
+                } catch (e) {
+                    console.error({ e });
                     await this.producer.sendMessage({
                         key: 'myKey',
                         value: JSON.stringify({
@@ -157,9 +146,9 @@ export default class EventProcessor {
                                 trx,
                                 'RequestedAccountAdd'
                             );
-                            const existingVersionId =
+                            const lockExistingVersionId =
                                 lockObject?.versionId ?? null;
-                            const existingProofOfInclusionBTree =
+                            const lockExistingProofOfInclusionBTree =
                                 undefined ===
                                 lockObject?.proofOfInclusionBTreeSerialized
                                     ? null
@@ -171,46 +160,60 @@ export default class EventProcessor {
                                           )
                                       );
                             if (
-                                existingVersionId !==
+                                lockExistingVersionId !==
                                 validInputMessageValueData.lastReadVersionId
                             ) {
                                 throw new StaleWrite(
                                     `Existing Lock versionId ${lockObject?.versionId} > message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`,
                                     {
                                         name: 'RequestedAccountAdd',
-                                        versionId: existingVersionId,
+                                        versionId: lockExistingVersionId,
                                         proofOfInclusionBTreeSerialized:
-                                            existingProofOfInclusionBTree
+                                            lockExistingProofOfInclusionBTree
                                                 ? JSON.stringify(
-                                                      existingProofOfInclusionBTree
+                                                      lockExistingProofOfInclusionBTree
                                                   )
                                                 : null,
                                     }
                                 );
                             }
-                            const versionId =
-                                null === existingVersionId
+                            const lockVersionId =
+                                null === lockExistingVersionId
                                     ? 0
-                                    : existingVersionId + 1;
-                            const proofOfInclusionBTreeSerialized =
-                                existingProofOfInclusionBTree ?? new BTree(3);
-                            proofOfInclusionBTreeSerialized.insert(
+                                    : lockExistingVersionId + 1;
+                            const lockProofOfInclusionBTree =
+                                lockExistingProofOfInclusionBTree ??
+                                new BTree(3);
+                            lockProofOfInclusionBTree.insert(
                                 validInputMessageValueData.messageId
                             );
-                            dbObject = await createAccountAlpaca(trx, {
+                            const lockProofOfInclusionBTreeSerialized =
+                                JSON.stringify(lockProofOfInclusionBTree);
+                            const dbObjectBTree = new BTree(3);
+                            dbObjectBTree.insert(
+                                validInputMessageValueData.messageId
+                            );
+                            const objectToInsert = {
                                 platformAccountId:
                                     validInputMessageValueData.data
                                         .platformAccountId,
                                 platformAPIKey:
                                     validInputMessageValueData.data
                                         .platformAPIKey,
-                            });
+                                versionId: 0,
+                                proofOfInclusionBTreeSerialized:
+                                    JSON.stringify(dbObjectBTree),
+                            };
+                            console.log(JSON.stringify({ objectToInsert }));
+                            dbObject = await createAccountAlpaca(
+                                trx,
+                                objectToInsert
+                            );
                             lockObject = await upsertLock(trx, {
                                 name: 'RequestedAccountAdd',
-                                versionId,
-                                proofOfInclusionBTreeSerialized: JSON.stringify(
-                                    proofOfInclusionBTreeSerialized
-                                ),
+                                versionId: lockVersionId,
+                                proofOfInclusionBTreeSerialized:
+                                    lockProofOfInclusionBTreeSerialized,
                             });
                         });
                     1;
@@ -251,6 +254,7 @@ export default class EventProcessor {
                             }),
                         });
                     } else {
+                        console.error({ e });
                         await this.producer.sendMessage({
                             key: 'myKey',
                             value: JSON.stringify({
