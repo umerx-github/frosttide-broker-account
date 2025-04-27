@@ -6,6 +6,9 @@ export const inputMessageValueSchema = z.union([
         eventType: z.enum(['RequestedAccountList']),
     }),
     z.object({
+        eventType: z.enum(['RequestedAccountAddIntent']),
+    }),
+    z.object({
         eventType: z.enum(['RequestedAccountAdd']),
         messageId: z.number().int().min(0),
         lastReadVersionId: z.number().int().min(0).nullable(),

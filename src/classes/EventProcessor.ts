@@ -65,7 +65,10 @@ export default class EventProcessor {
                         key: 'myKey',
                         value: JSON.stringify({
                             eventType: 'AcknowledgedAccountList',
-                            data: dbObject,
+                            data: {
+                                request: validInputMessageValueData,
+                                payload: dbObject,
+                            },
                         }),
                     });
                 } catch (e) {
@@ -73,7 +76,70 @@ export default class EventProcessor {
                         key: 'myKey',
                         value: JSON.stringify({
                             eventType: 'RejectedAccountList',
-                            data: validInputMessageValueData,
+                            data: {
+                                request: validInputMessageValueData,
+                                reason: 'Unknown error',
+                            },
+                        }),
+                    });
+                }
+                break;
+            }
+            case 'RequestedAccountAddIntent': {
+                try {
+                    let lockObject: Lock | undefined;
+                    await this.db
+                        .transaction()
+                        .setIsolationLevel('serializable')
+                        .execute(async (trx) => {
+                            lockObject = await findLockByName(
+                                trx,
+                                'RequestedAccountAdd'
+                            );
+                            const existingVersionId =
+                                lockObject?.versionId ?? null;
+                            const existingProofOfInclusionBTree =
+                                undefined ===
+                                lockObject?.proofOfInclusionBTreeSerialized
+                                    ? null
+                                    : BTree.fromJSON(
+                                          btreeSchema.parse(
+                                              JSON.parse(
+                                                  lockObject.proofOfInclusionBTreeSerialized
+                                              )
+                                          )
+                                      );
+                        });
+                    if (undefined === lockObject) {
+                        throw new Error(`lockObject is undefined`);
+                    }
+                    await this.producer.sendMessage({
+                        key: 'myKey',
+                        value: JSON.stringify({
+                            eventType: 'AcknowledgedAccountAddIntent',
+                            data: {
+                                request: validInputMessageValueData,
+                                lock: {
+                                    versionId: lockObject.versionId,
+                                    proofOfInclusionBTreeSerialized:
+                                        lockObject.proofOfInclusionBTreeSerialized,
+                                },
+                            },
+                        }),
+                    });
+                } catch {
+                    await this.producer.sendMessage({
+                        key: 'myKey',
+                        value: JSON.stringify({
+                            eventType: 'RejectedAccountAddIntent',
+                            data: {
+                                lock: {
+                                    versionId: null,
+                                    proofOfInclusionBTreeSerialized: null,
+                                },
+                                request: validInputMessageValueData,
+                                reason: 'Unknown error',
+                            },
                         }),
                     });
                 }
@@ -147,6 +213,7 @@ export default class EventProcessor {
                                 ),
                             });
                         });
+                    1;
                     if (undefined === dbObject || undefined === lockObject) {
                         throw new Error(`dbObject or lockObject are undefined`);
                     }
@@ -154,10 +221,15 @@ export default class EventProcessor {
                         key: 'myKey',
                         value: JSON.stringify({
                             eventType: 'AcknowledgedAccountAdd',
-                            versionId: lockObject.versionId,
-                            proofOfInclusionBTreeSerialized:
-                                lockObject.proofOfInclusionBTreeSerialized,
-                            data: dbObject,
+                            data: {
+                                request: validInputMessageValueData,
+                                lock: {
+                                    versionId: lockObject.versionId,
+                                    proofOfInclusionBTreeSerialized:
+                                        lockObject.proofOfInclusionBTreeSerialized,
+                                },
+                                payload: dbObject,
+                            },
                         }),
                     });
                 } catch (e) {
@@ -166,10 +238,16 @@ export default class EventProcessor {
                             key: 'myKey',
                             value: JSON.stringify({
                                 eventType: 'RejectedAccountAdd',
-                                versionId: e.lock.versionId,
-                                proofOfInclusionBTreeSerialized:
-                                    e.lock.proofOfInclusionBTreeSerialized,
-                                data: validInputMessageValueData,
+                                data: {
+                                    request: validInputMessageValueData,
+                                    lock: {
+                                        versionId: e.lock.versionId,
+                                        proofOfInclusionBTreeSerialized:
+                                            e.lock
+                                                .proofOfInclusionBTreeSerialized,
+                                    },
+                                    reason: e.message,
+                                },
                             }),
                         });
                     } else {
@@ -177,9 +255,14 @@ export default class EventProcessor {
                             key: 'myKey',
                             value: JSON.stringify({
                                 eventType: 'RejectedAccountAdd',
-                                versionId: null,
-                                proofOfInclusionBTreeSerialized: null,
-                                data: validInputMessageValueData,
+                                data: {
+                                    lock: {
+                                        versionId: null,
+                                        proofOfInclusionBTreeSerialized: null,
+                                    },
+                                    request: validInputMessageValueData,
+                                    reason: 'Unknown error',
+                                },
                             }),
                         });
                     }
