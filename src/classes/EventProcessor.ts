@@ -11,7 +11,7 @@ import { AccountAlpaca, Database, Lock } from '../interfaces/Database.js';
 import { findLockByName, upsertLock } from '../models/lockTable.js';
 import { BTree } from '@umerx/btreejs';
 import { btreeSchema } from '../schemas/btree.js';
-import StaleWrite from '../exceptions/staleWrite.js';
+import StaleWrite from '../exceptions/StaleWrite.js';
 
 interface EventProcessorProps<DatabaseType> {
     db: Kysely<DatabaseType>;
