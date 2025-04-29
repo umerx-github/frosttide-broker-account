@@ -204,7 +204,6 @@ export default class EventProcessor {
                                 proofOfInclusionBTreeSerialized:
                                     JSON.stringify(dbObjectBTree),
                             };
-                            console.log(JSON.stringify({ objectToInsert }));
                             dbObject = await createAccountAlpaca(
                                 trx,
                                 objectToInsert
