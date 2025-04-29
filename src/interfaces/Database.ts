@@ -1,4 +1,5 @@
 import { Generated, Insertable, Selectable, Updateable } from 'kysely';
+import { LockName } from './LockName.js';
 
 export interface Database {
     AccountAlpaca: AccountAlpacaTable;
@@ -6,7 +7,7 @@ export interface Database {
 }
 
 export interface LockTable {
-    name: string;
+    name: LockName;
     versionId: number;
     proofOfInclusionBTreeSerialized: string;
 }

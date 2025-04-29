@@ -98,9 +98,20 @@ export default class EventProcessor {
                                 'RequestedAccountAdd'
                             );
                         });
-                    if (undefined === lockObject) {
-                        throw new Error(`lockObject is undefined`);
-                    }
+                    const lockExistingVersionId = lockObject?.versionId ?? null;
+                    const lockExistingProofOfInclusionBTree =
+                        undefined ===
+                        lockObject?.proofOfInclusionBTreeSerialized
+                            ? null
+                            : BTree.fromJSON(
+                                  btreeSchema.parse(
+                                      JSON.parse(
+                                          lockObject.proofOfInclusionBTreeSerialized
+                                      )
+                                  )
+                              );
+                    const lockExistingProofOfInclusionBTreeSerialized =
+                        JSON.stringify(lockExistingProofOfInclusionBTree);
                     await this.producer.sendMessage({
                         key: 'myKey',
                         value: JSON.stringify({
@@ -108,9 +119,9 @@ export default class EventProcessor {
                             data: {
                                 request: validInputMessageValueData,
                                 lock: {
-                                    versionId: lockObject.versionId,
+                                    versionId: lockExistingVersionId,
                                     proofOfInclusionBTreeSerialized:
-                                        lockObject.proofOfInclusionBTreeSerialized,
+                                        lockExistingProofOfInclusionBTreeSerialized,
                                 },
                             },
                         }),
@@ -164,7 +175,7 @@ export default class EventProcessor {
                                 validInputMessageValueData.lastReadVersionId
                             ) {
                                 throw new StaleWrite(
-                                    `Existing Lock versionId ${lockObject?.versionId} > message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`,
+                                    `Existing Lock versionId ${lockObject?.versionId} !== message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`,
                                     {
                                         name: 'RequestedAccountAdd',
                                         versionId: lockExistingVersionId,
@@ -193,6 +204,8 @@ export default class EventProcessor {
                             dbObjectBTree.insert(
                                 validInputMessageValueData.messageId
                             );
+                            const dbObjectBTreeSerialized =
+                                JSON.stringify(dbObjectBTree);
                             const objectToInsert = {
                                 platformAccountId:
                                     validInputMessageValueData.data
@@ -202,7 +215,7 @@ export default class EventProcessor {
                                         .platformAPIKey,
                                 versionId: 0,
                                 proofOfInclusionBTreeSerialized:
-                                    JSON.stringify(dbObjectBTree),
+                                    dbObjectBTreeSerialized,
                             };
                             dbObject = await createAccountAlpaca(
                                 trx,

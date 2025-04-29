@@ -1,8 +1,12 @@
 import { Transaction } from 'kysely';
-import { Lock, Database } from '../interfaces/Database.js';
+import { Database } from '../interfaces/Database.js';
 import { NewLock } from '../interfaces/Database.js';
+import { LockName } from '../interfaces/LockName.js';
 
-export async function findLockByName(trx: Transaction<Database>, name: string) {
+export async function findLockByName(
+    trx: Transaction<Database>,
+    name: LockName
+) {
     return trx
         .selectFrom('Lock')
         .where('name', '=', name)
