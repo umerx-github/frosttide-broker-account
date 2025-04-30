@@ -160,11 +160,79 @@
 
 #### Request
 
+```
+{
+	"eventType": "RequestedAccountUpdate",
+	"messageId": 2,
+	"lastReadVersionId": 1,
+	"data": {
+		"id": 1,
+		"platform": "Alpaca",
+		"platformAccountId": "cba321",
+		"platformAPIKey": "zyx123"
+	}
+}
+```
+
 #### Response
 
 ##### AcknowledgedAccountUpdate
 
+```
+{
+  "eventType": "AcknowledgedAccountUpdate",
+  "data": {
+    "request": {
+      "eventType": "RequestedAccountUpdate",
+      "messageId": 2,
+      "lastReadVersionId": 0,
+      "data": {
+        "platform": "Alpaca",
+        "platformAccountId": "cba321",
+        "platformAPIKey": "zyx123",
+        "id": 1
+      }
+    },
+    "lock": {
+      "versionId": 1,
+      "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2],\"children\":[]}}"
+    },
+    "payload": {
+      "id": 2,
+      "platformAccountId": "cba321",
+      "platformAPIKey": "zyx123",
+      "versionId": 1,
+      "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2],\"children\":[]}}"
+    }
+  }
+}
+```
+
 ##### RejectedAccountUpdate
+
+```
+{
+  "eventType": "RejectedAccountUpdate",
+  "data": {
+    "request": {
+      "eventType": "RequestedAccountUpdate",
+      "messageId": 2,
+      "lastReadVersionId": 1,
+      "data": {
+        "platform": "Alpaca",
+        "platformAccountId": "cba321",
+        "platformAPIKey": "zyx123",
+        "id": 1
+      }
+    },
+    "lock": {
+      "versionId": 0,
+      "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2],\"children\":[]}}"
+    },
+    "reason": "Existing Lock versionId 0 !== message lastReadVersionId 1"
+  }
+}
+```
 
 ### RequestedAccountDelete
 
