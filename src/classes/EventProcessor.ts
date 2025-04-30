@@ -86,7 +86,7 @@ export default class EventProcessor {
                 }
                 break;
             }
-            case 'RequestedAccountAddIntent': {
+            case 'RequestedAccountCreateIntent': {
                 try {
                     let lockObject: Lock | undefined;
                     await this.db
@@ -95,7 +95,7 @@ export default class EventProcessor {
                         .execute(async (trx) => {
                             lockObject = await findLockByName(
                                 trx,
-                                'RequestedAccountAdd'
+                                'RequestedAccountCreate'
                             );
                         });
                     const lockExistingVersionId = lockObject?.versionId ?? null;
@@ -115,7 +115,7 @@ export default class EventProcessor {
                     await this.producer.sendMessage({
                         key: 'myKey',
                         value: JSON.stringify({
-                            eventType: 'AcknowledgedAccountAddIntent',
+                            eventType: 'AcknowledgedAccountCreateIntent',
                             data: {
                                 request: validInputMessageValueData,
                                 lock: {
@@ -131,7 +131,7 @@ export default class EventProcessor {
                     await this.producer.sendMessage({
                         key: 'myKey',
                         value: JSON.stringify({
-                            eventType: 'RejectedAccountAddIntent',
+                            eventType: 'RejectedAccountCreateIntent',
                             data: {
                                 lock: {
                                     versionId: null,
@@ -145,7 +145,7 @@ export default class EventProcessor {
                 }
                 break;
             }
-            case 'RequestedAccountAdd': {
+            case 'RequestedAccountCreate': {
                 try {
                     let lockObject: Lock | undefined;
                     let dbObject: AccountAlpaca | undefined;
@@ -155,7 +155,7 @@ export default class EventProcessor {
                         .execute(async (trx) => {
                             lockObject = await findLockByName(
                                 trx,
-                                'RequestedAccountAdd'
+                                'RequestedAccountCreate'
                             );
                             const lockExistingVersionId =
                                 lockObject?.versionId ?? null;
@@ -177,7 +177,7 @@ export default class EventProcessor {
                                 throw new StaleWrite(
                                     `Existing Lock versionId ${lockObject?.versionId} !== message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`,
                                     {
-                                        name: 'RequestedAccountAdd',
+                                        name: 'RequestedAccountCreate',
                                         versionId: lockExistingVersionId,
                                         proofOfInclusionBTreeSerialized:
                                             lockExistingProofOfInclusionBTree
@@ -222,7 +222,7 @@ export default class EventProcessor {
                                 objectToInsert
                             );
                             lockObject = await upsertLock(trx, {
-                                name: 'RequestedAccountAdd',
+                                name: 'RequestedAccountCreate',
                                 versionId: lockVersionId,
                                 proofOfInclusionBTreeSerialized:
                                     lockProofOfInclusionBTreeSerialized,
@@ -235,7 +235,7 @@ export default class EventProcessor {
                     await this.producer.sendMessage({
                         key: 'myKey',
                         value: JSON.stringify({
-                            eventType: 'AcknowledgedAccountAdd',
+                            eventType: 'AcknowledgedAccountCreate',
                             data: {
                                 request: validInputMessageValueData,
                                 lock: {
@@ -252,7 +252,7 @@ export default class EventProcessor {
                         await this.producer.sendMessage({
                             key: 'myKey',
                             value: JSON.stringify({
-                                eventType: 'RejectedAccountAdd',
+                                eventType: 'RejectedAccountCreate',
                                 data: {
                                     request: validInputMessageValueData,
                                     lock: {
@@ -270,7 +270,7 @@ export default class EventProcessor {
                         await this.producer.sendMessage({
                             key: 'myKey',
                             value: JSON.stringify({
-                                eventType: 'RejectedAccountAdd',
+                                eventType: 'RejectedAccountCreate',
                                 data: {
                                     lock: {
                                         versionId: null,

@@ -52,26 +52,26 @@
 
 ##### RejectedAccountList
 
-### RequestedAccountAddIntent
+### RequestedAccountCreateIntent
 
 #### Request
 
 ```
 {
-	"eventType": "RequestedAccountAddIntent"
+	"eventType": "RequestedAccountCreateIntent"
 }
 ```
 
 #### Response
 
-##### AcknowledgedAccountAddIntent
+##### AcknowledgedAccountCreateIntent
 
 ```
 {
-	"eventType": "AcknowledgedAccountAddIntent",
+	"eventType": "AcknowledgedAccountCreateIntent",
 	"data": {
 		"request": {
-			"eventType": "RequestedAccountAddIntent"
+			"eventType": "RequestedAccountCreateIntent"
 		},
 		"lock": {
 			"versionId": 8,
@@ -81,13 +81,13 @@
 }
 ```
 
-### RequestedAccountAdd
+### RequestedAccountCreate
 
 #### Request
 
 ```
 {
-	"eventType": "RequestedAccountAdd",
+	"eventType": "RequestedAccountCreate",
 	"messageId": 2,
 	"lastReadVersionId": 1,
 	"data": {
@@ -100,14 +100,14 @@
 
 #### Response
 
-##### AcknowledgedAccountAdd
+##### AcknowledgedAccountCreate
 
 ```
 {
-	"eventType": "AcknowledgedAccountAdd",
+	"eventType": "AcknowledgedAccountCreate",
 	"data": {
 		"request": {
-			"eventType": "RequestedAccountAdd",
+			"eventType": "RequestedAccountCreate",
 			"messageId": 2,
 			"lastReadVersionId": 1,
 			"data": {
@@ -131,14 +131,14 @@
 }
 ```
 
-##### RejectedAccountAdd
+##### RejectedAccountCreate
 
 ```
 {
-	"eventType": "RejectedAccountAdd",
+	"eventType": "RejectedAccountCreate",
 	"data": {
 		"request": {
-			"eventType": "RequestedAccountAdd",
+			"eventType": "RequestedAccountCreate",
 			"messageId": 2,
 			"lastReadVersionId": 1,
 			"data": {
