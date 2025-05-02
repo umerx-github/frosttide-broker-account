@@ -5,8 +5,10 @@ import { inputSchema } from '../schemas/inputSchema.js';
 import { Kysely } from 'kysely';
 import {
     createAccountAlpaca,
+    deleteAccountAlpacaById,
     findAccountAlpacaById,
     listAccountAlpaca,
+    updateAccountAlpacaById,
 } from '../models/alpacaAccountTable.js';
 import { AccountAlpaca, Database, Lock } from '../interfaces/Database.js';
 import { findLockByName, upsertLock } from '../models/lockTable.js';
@@ -351,8 +353,9 @@ export default class EventProcessor {
                                 proofOfInclusionBTreeSerialized:
                                     lockProofOfInclusionBTreeSerialized,
                             };
-                            dbObject = await createAccountAlpaca(
+                            dbObject = await updateAccountAlpacaById(
                                 trx,
+                                validInputMessageValueData.data.id,
                                 objectToInsert
                             );
                         });
@@ -399,6 +402,122 @@ export default class EventProcessor {
                             key: 'myKey',
                             value: JSON.stringify({
                                 eventType: 'RejectedAccountUpdate',
+                                data: {
+                                    lock: {
+                                        versionId: null,
+                                        proofOfInclusionBTreeSerialized: null,
+                                    },
+                                    request: validInputMessageValueData,
+                                    reason: 'Unknown error',
+                                },
+                            }),
+                        });
+                    }
+                }
+                break;
+            }
+            case 'RequestedAccountDelete': {
+                try {
+                    let dbObject: AccountAlpaca | undefined;
+                    await this.db
+                        .transaction()
+                        .setIsolationLevel('serializable')
+                        .execute(async (trx) => {
+                            dbObject = await findAccountAlpacaById(
+                                trx,
+                                validInputMessageValueData.data.id
+                            );
+                            const lockExistingVersionId =
+                                dbObject?.versionId ?? null;
+                            const lockExistingProofOfInclusionBTree =
+                                undefined ===
+                                dbObject?.proofOfInclusionBTreeSerialized
+                                    ? null
+                                    : BTree.fromJSON(
+                                          btreeSchema.parse(
+                                              JSON.parse(
+                                                  dbObject.proofOfInclusionBTreeSerialized
+                                              )
+                                          )
+                                      );
+                            if (
+                                lockExistingVersionId !==
+                                validInputMessageValueData.lastReadVersionId
+                            ) {
+                                throw new StaleWrite(
+                                    `Existing Lock versionId ${dbObject?.versionId} !== message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`,
+                                    {
+                                        name: 'RequestedAccountUpdate',
+                                        versionId: lockExistingVersionId,
+                                        proofOfInclusionBTreeSerialized:
+                                            lockExistingProofOfInclusionBTree
+                                                ? JSON.stringify(
+                                                      lockExistingProofOfInclusionBTree
+                                                  )
+                                                : null,
+                                    }
+                                );
+                            }
+                            const lockVersionId =
+                                null === lockExistingVersionId
+                                    ? 0
+                                    : lockExistingVersionId + 1;
+                            const lockProofOfInclusionBTree =
+                                lockExistingProofOfInclusionBTree ??
+                                new BTree(3);
+                            lockProofOfInclusionBTree.insert(
+                                validInputMessageValueData.messageId
+                            );
+                            const lockProofOfInclusionBTreeSerialized =
+                                JSON.stringify(lockProofOfInclusionBTree);
+                            dbObject = await deleteAccountAlpacaById(
+                                trx,
+                                validInputMessageValueData.data.id
+                            );
+                        });
+                    1;
+                    if (undefined === dbObject) {
+                        throw new Error(`dbObject is undefined`);
+                    }
+                    await this.producer.sendMessage({
+                        key: 'myKey',
+                        value: JSON.stringify({
+                            eventType: 'AcknowledgedAccountDelete',
+                            data: {
+                                request: validInputMessageValueData,
+                                lock: {
+                                    versionId: dbObject.versionId,
+                                    proofOfInclusionBTreeSerialized:
+                                        dbObject.proofOfInclusionBTreeSerialized,
+                                },
+                                payload: dbObject,
+                            },
+                        }),
+                    });
+                } catch (e) {
+                    if (e instanceof StaleWrite) {
+                        await this.producer.sendMessage({
+                            key: 'myKey',
+                            value: JSON.stringify({
+                                eventType: 'RejectedAccountDelete',
+                                data: {
+                                    request: validInputMessageValueData,
+                                    lock: {
+                                        versionId: e.lock.versionId,
+                                        proofOfInclusionBTreeSerialized:
+                                            e.lock
+                                                .proofOfInclusionBTreeSerialized,
+                                    },
+                                    reason: e.message,
+                                },
+                            }),
+                        });
+                    } else {
+                        console.error({ e });
+                        await this.producer.sendMessage({
+                            key: 'myKey',
+                            value: JSON.stringify({
+                                eventType: 'RejectedAccountDelete',
                                 data: {
                                     lock: {
                                         versionId: null,

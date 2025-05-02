@@ -1,6 +1,9 @@
 import { Transaction } from 'kysely';
-import { Database } from '../interfaces/Database.js';
-import { NewAccountAlpaca } from '../interfaces/Database.js';
+import { AccountAlpaca, Database } from '../interfaces/Database.js';
+import {
+    NewAccountAlpaca,
+    AccountAlpacaUpdate,
+} from '../interfaces/Database.js';
 
 export async function listAccountAlpaca(trx: Transaction<Database>) {
     return trx.selectFrom('AccountAlpaca').selectAll().execute();
@@ -31,5 +34,37 @@ export async function createAccountAlpaca(
     if (result === undefined) {
         throw new Error('Failed to create AccountAlpaca');
     }
+    return result;
+}
+
+export async function updateAccountAlpacaById(
+    trx: Transaction<Database>,
+    id: number,
+    accountAlpaca: AccountAlpacaUpdate
+) {
+    const { numUpdatedRows } = await trx
+        .updateTable('AccountAlpaca')
+        .set({ ...accountAlpaca })
+        .where('id', '=', id)
+        .executeTakeFirstOrThrow();
+    const result = await findAccountAlpacaById(trx, id);
+    if (result === undefined) {
+        throw new Error('Failed to update AccountAlpaca');
+    }
+    return result;
+}
+
+export async function deleteAccountAlpacaById(
+    trx: Transaction<Database>,
+    id: number
+) {
+    const result = await findAccountAlpacaById(trx, id);
+    if (result === undefined) {
+        throw new Error('Failed to delete AccountAlpaca');
+    }
+    await trx
+        .deleteFrom('AccountAlpaca')
+        .where('id', '=', id)
+        .executeTakeFirstOrThrow();
     return result;
 }

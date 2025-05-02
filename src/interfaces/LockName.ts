@@ -1,5 +1,2 @@
-export const lockNames = [
-    'RequestedAccountCreate',
-    'RequestedAccountDelete',
-] as const;
+export const lockNames = ['RequestedAccountCreate'] as const;
 export type LockName = (typeof lockNames)[number];
