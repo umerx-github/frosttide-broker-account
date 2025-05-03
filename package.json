@@ -5,12 +5,13 @@
     "main": "index.js",
     "scripts": {
         "build": "tsc",
-        "test": "mocha",
+        "test": "mocha --require ./dist/scripts/destroy.js",
+        "test:dev": "npm run build && npm run test",
         "migrate:make": "cp ./dev/templates/migration.ts ./src/migrations/$(date -Iseconds).ts",
         "migrate": "node ./dist/scripts/migrate.js",
-        "migrate:dev": "rm -rf ./dist/migrations/* && npm run build && node ./dist/scripts/migrate.js",
+        "migrate:dev": "rm -rf ./dist/migrations/* && npm run build && npm run migrate",
         "seed": "node ./dist/scripts/seed.js",
-        "seed:dev": "npm run build && node ./dist/scripts/seed.js",
+        "seed:dev": "npm run build && npm run seed",
         "serve": "node ./dist/index.js",
         "dev": "nodemon --watch './src/*' -e ts,js --exec 'npm run build; npm run migrate; npm run serve'",
         "prod": "npm run migrate && npm run serve"
