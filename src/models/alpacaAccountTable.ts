@@ -1,5 +1,5 @@
 import { Transaction } from 'kysely';
-import { AccountAlpaca, Database } from '../interfaces/Database.js';
+import { Database } from '../interfaces/Database.js';
 import {
     NewAccountAlpaca,
     AccountAlpacaUpdate,
