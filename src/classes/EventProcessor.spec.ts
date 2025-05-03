@@ -8,9 +8,6 @@ use(sinonChai);
 
 describe('EventProcessor', () => {
     it('processes events with a connection 1x', async () => {
-        // const producer: EventProcessorProducerLike = {
-        //     async sendMessage(message: { key: string; value: string }) {},
-        // };
         const producer = {
             sendMessage: sinon.spy(),
         };
@@ -70,9 +67,6 @@ describe('EventProcessor', () => {
         });
     });
     it('processes events with a connection 2x', async () => {
-        // const producer: EventProcessorProducerLike = {
-        //     async sendMessage(message: { key: string; value: string }) {},
-        // };
         const producer = {
             sendMessage: sinon.spy(),
         };
