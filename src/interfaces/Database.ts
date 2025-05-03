@@ -1,5 +1,6 @@
 import { Generated, Insertable, Selectable, Updateable } from 'kysely';
 import { LockName } from './LockName.js';
+import { RecordStatus } from './RecordStatus.js';
 
 export interface Database {
     AccountAlpaca: AccountAlpacaTable;
@@ -22,10 +23,11 @@ export type LockUpdate = Updateable<LockTable>;
 // `NewPerson` and `PersonUpdate` types below.
 export interface AccountAlpacaTable {
     id: Generated<number>;
-    platformAccountId: string;
-    platformAPIKey: string;
+    recordStatus: RecordStatus;
     versionId: number;
     proofOfInclusionBTreeSerialized: string;
+    platformAccountId: string;
+    platformAPIKey: string;
 }
 
 export type AccountAlpaca = Selectable<AccountAlpacaTable>;

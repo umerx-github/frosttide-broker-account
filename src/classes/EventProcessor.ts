@@ -57,12 +57,12 @@ export default class EventProcessor {
         switch (validInputMessageValueData.eventType) {
             case 'RequestedAccountList': {
                 try {
-                    let dbObject: AccountAlpaca[] | undefined;
+                    let dbObjects: AccountAlpaca[] | undefined;
                     await this.db
                         .transaction()
                         .setIsolationLevel('serializable')
                         .execute(async (trx) => {
-                            dbObject = await listAccountAlpaca(trx);
+                            dbObjects = await listAccountAlpaca(trx);
                         });
                     await this.producer.sendMessage({
                         key: 'myKey',
@@ -70,7 +70,22 @@ export default class EventProcessor {
                             eventType: 'AcknowledgedAccountList',
                             data: {
                                 request: validInputMessageValueData,
-                                payload: dbObject,
+                                payload: dbObjects?.map((dbObject) => {
+                                    return {
+                                        lock: {
+                                            versionId: dbObject.versionId,
+                                            proofOfInclusionBTreeSerialized:
+                                                dbObject.proofOfInclusionBTreeSerialized,
+                                        },
+                                        object: {
+                                            id: dbObject.id,
+                                            platformAccountId:
+                                                dbObject.platformAccountId,
+                                            platformAPIKey:
+                                                dbObject.platformAPIKey,
+                                        },
+                                    };
+                                }),
                             },
                         }),
                     });
@@ -209,7 +224,8 @@ export default class EventProcessor {
                             );
                             const dbObjectBTreeSerialized =
                                 JSON.stringify(dbObjectBTree);
-                            const objectToInsert = {
+                            dbObject = await createAccountAlpaca(trx, {
+                                recordStatus: 'ACTIVE',
                                 platformAccountId:
                                     validInputMessageValueData.data
                                         .platformAccountId,
@@ -219,11 +235,7 @@ export default class EventProcessor {
                                 versionId: 0,
                                 proofOfInclusionBTreeSerialized:
                                     dbObjectBTreeSerialized,
-                            };
-                            dbObject = await createAccountAlpaca(
-                                trx,
-                                objectToInsert
-                            );
+                            });
                             lockObject = await upsertLock(trx, {
                                 name: 'RequestedAccountCreate',
                                 versionId: lockVersionId,
@@ -246,7 +258,19 @@ export default class EventProcessor {
                                     proofOfInclusionBTreeSerialized:
                                         lockObject.proofOfInclusionBTreeSerialized,
                                 },
-                                payload: dbObject,
+                                payload: {
+                                    lock: {
+                                        versionId: dbObject.versionId,
+                                        proofOfInclusionBTreeSerialized:
+                                            dbObject.proofOfInclusionBTreeSerialized,
+                                    },
+                                    object: {
+                                        id: dbObject.id,
+                                        platformAccountId:
+                                            dbObject.platformAccountId,
+                                        platformAPIKey: dbObject.platformAPIKey,
+                                    },
+                                },
                             },
                         }),
                     });
@@ -275,11 +299,11 @@ export default class EventProcessor {
                             value: JSON.stringify({
                                 eventType: 'RejectedAccountCreate',
                                 data: {
+                                    request: validInputMessageValueData,
                                     lock: {
                                         versionId: null,
                                         proofOfInclusionBTreeSerialized: null,
                                     },
-                                    request: validInputMessageValueData,
                                     reason: 'Unknown error',
                                 },
                             }),
@@ -369,12 +393,19 @@ export default class EventProcessor {
                             eventType: 'AcknowledgedAccountUpdate',
                             data: {
                                 request: validInputMessageValueData,
-                                lock: {
-                                    versionId: dbObject.versionId,
-                                    proofOfInclusionBTreeSerialized:
-                                        dbObject.proofOfInclusionBTreeSerialized,
+                                payload: {
+                                    lock: {
+                                        versionId: dbObject.versionId,
+                                        proofOfInclusionBTreeSerialized:
+                                            dbObject.proofOfInclusionBTreeSerialized,
+                                    },
+                                    object: {
+                                        id: dbObject.id,
+                                        platformAccountId:
+                                            dbObject.platformAccountId,
+                                        platformAPIKey: dbObject.platformAPIKey,
+                                    },
                                 },
-                                payload: dbObject,
                             },
                         }),
                     });
@@ -386,11 +417,13 @@ export default class EventProcessor {
                                 eventType: 'RejectedAccountUpdate',
                                 data: {
                                     request: validInputMessageValueData,
-                                    lock: {
-                                        versionId: e.lock.versionId,
-                                        proofOfInclusionBTreeSerialized:
-                                            e.lock
-                                                .proofOfInclusionBTreeSerialized,
+                                    payload: {
+                                        lock: {
+                                            versionId: e.lock.versionId,
+                                            proofOfInclusionBTreeSerialized:
+                                                e.lock
+                                                    .proofOfInclusionBTreeSerialized,
+                                        },
                                     },
                                     reason: e.message,
                                 },
@@ -403,11 +436,14 @@ export default class EventProcessor {
                             value: JSON.stringify({
                                 eventType: 'RejectedAccountUpdate',
                                 data: {
-                                    lock: {
-                                        versionId: null,
-                                        proofOfInclusionBTreeSerialized: null,
-                                    },
                                     request: validInputMessageValueData,
+                                    payload: {
+                                        lock: {
+                                            versionId: null,
+                                            proofOfInclusionBTreeSerialized:
+                                                null,
+                                        },
+                                    },
                                     reason: 'Unknown error',
                                 },
                             }),
@@ -470,9 +506,16 @@ export default class EventProcessor {
                             );
                             const lockProofOfInclusionBTreeSerialized =
                                 JSON.stringify(lockProofOfInclusionBTree);
-                            dbObject = await deleteAccountAlpacaById(
+                            dbObject = await updateAccountAlpacaById(
                                 trx,
-                                validInputMessageValueData.data.id
+                                validInputMessageValueData.data.id,
+                                {
+                                    ...dbObject,
+                                    recordStatus: 'DELETED',
+                                    versionId: lockVersionId,
+                                    proofOfInclusionBTreeSerialized:
+                                        lockProofOfInclusionBTreeSerialized,
+                                }
                             );
                         });
                     1;
@@ -485,12 +528,19 @@ export default class EventProcessor {
                             eventType: 'AcknowledgedAccountDelete',
                             data: {
                                 request: validInputMessageValueData,
-                                lock: {
-                                    versionId: dbObject.versionId,
-                                    proofOfInclusionBTreeSerialized:
-                                        dbObject.proofOfInclusionBTreeSerialized,
+                                payload: {
+                                    lock: {
+                                        versionId: dbObject.versionId,
+                                        proofOfInclusionBTreeSerialized:
+                                            dbObject.proofOfInclusionBTreeSerialized,
+                                    },
+                                    object: {
+                                        id: dbObject.id,
+                                        platformAccountId:
+                                            dbObject.platformAccountId,
+                                        platformAPIKey: dbObject.platformAPIKey,
+                                    },
                                 },
-                                payload: dbObject,
                             },
                         }),
                     });
@@ -502,11 +552,13 @@ export default class EventProcessor {
                                 eventType: 'RejectedAccountDelete',
                                 data: {
                                     request: validInputMessageValueData,
-                                    lock: {
-                                        versionId: e.lock.versionId,
-                                        proofOfInclusionBTreeSerialized:
-                                            e.lock
-                                                .proofOfInclusionBTreeSerialized,
+                                    payload: {
+                                        lock: {
+                                            versionId: e.lock.versionId,
+                                            proofOfInclusionBTreeSerialized:
+                                                e.lock
+                                                    .proofOfInclusionBTreeSerialized,
+                                        },
                                     },
                                     reason: e.message,
                                 },
@@ -519,11 +571,14 @@ export default class EventProcessor {
                             value: JSON.stringify({
                                 eventType: 'RejectedAccountDelete',
                                 data: {
-                                    lock: {
-                                        versionId: null,
-                                        proofOfInclusionBTreeSerialized: null,
-                                    },
                                     request: validInputMessageValueData,
+                                    payload: {
+                                        lock: {
+                                            versionId: null,
+                                            proofOfInclusionBTreeSerialized:
+                                                null,
+                                        },
+                                    },
                                     reason: 'Unknown error',
                                 },
                             }),

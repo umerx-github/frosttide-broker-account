@@ -25,25 +25,26 @@
 		},
 		"payload": [
 			{
-				"id": 1,
-				"platformAccountId": "abc123",
-				"platformAPIKey": "xyz321",
-				"versionId": 0,
-				"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[0],\"children\":[]}}"
+				"lock": {
+					"versionId": 0,
+					"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2],\"children\":[]}}"
+				},
+				"object": {
+					"id": 1,
+					"platformAccountId": "abc123",
+					"platformAPIKey": "xyz321"
+				}
 			},
 			{
-				"id": 2,
-				"platformAccountId": "abc123",
-				"platformAPIKey": "xyz321",
-				"versionId": 0,
-				"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[1],\"children\":[]}}"
-			},
-			{
-				"id": 3,
-				"platformAccountId": "abc123",
-				"platformAPIKey": "xyz321",
-				"versionId": 0,
-				"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2],\"children\":[]}}"
+				"lock": {
+					"versionId": 0,
+					"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2],\"children\":[]}}"
+				},
+				"object": {
+					"id": 2,
+					"platformAccountId": "qwe456",
+					"platformAPIKey": "645rty"
+				}
 			}
 		]
 	}
@@ -74,8 +75,8 @@
 			"eventType": "RequestedAccountCreateIntent"
 		},
 		"lock": {
-			"versionId": 8,
-			"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":false,\"keys\":[0,1],\"children\":[{\"isLeaf\":true,\"keys\":[0,0],\"children\":[]},{\"isLeaf\":true,\"keys\":[0,0],\"children\":[]},{\"isLeaf\":true,\"keys\":[2,5,7],\"children\":[]}]}}"
+			"versionId": 1,
+			"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2],\"children\":[]}}"
 		}
 	}
 }
@@ -109,7 +110,7 @@
 		"request": {
 			"eventType": "RequestedAccountCreate",
 			"messageId": 2,
-			"lastReadVersionId": 1,
+			"lastReadVersionId": null,
 			"data": {
 				"platform": "Alpaca",
 				"platformAccountId": "abc123",
@@ -117,15 +118,19 @@
 			}
 		},
 		"lock": {
-			"versionId": 2,
-			"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[0,1,2],\"children\":[]}}"
-		},
-		"payload": {
-			"id": 3,
-			"platformAccountId": "abc123",
-			"platformAPIKey": "xyz321",
 			"versionId": 0,
 			"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2],\"children\":[]}}"
+		},
+		"payload": {
+			"lock": {
+				"versionId": 0,
+				"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2],\"children\":[]}}"
+			},
+			"object": {
+				"id": 1,
+				"platformAccountId": "abc123",
+				"platformAPIKey": "xyz321"
+			}
 		}
 	}
 }
@@ -140,7 +145,7 @@
 		"request": {
 			"eventType": "RequestedAccountCreate",
 			"messageId": 2,
-			"lastReadVersionId": 1,
+			"lastReadVersionId": 0,
 			"data": {
 				"platform": "Alpaca",
 				"platformAccountId": "abc123",
@@ -148,10 +153,10 @@
 			}
 		},
 		"lock": {
-			"versionId": 2,
-			"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[0,1,2],\"children\":[]}}"
+			"versionId": 1,
+			"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2],\"children\":[]}}"
 		},
-		"reason": "Existing Lock versionId 2 > message lastReadVersionId 1"
+		"reason": "Existing Lock versionId 1 !== message lastReadVersionId 0"
 	}
 }
 ```
@@ -180,31 +185,31 @@
 
 ```
 {
-  "eventType": "AcknowledgedAccountUpdate",
-  "data": {
-    "request": {
-      "eventType": "RequestedAccountUpdate",
-      "messageId": 2,
-      "lastReadVersionId": 0,
-      "data": {
-        "platform": "Alpaca",
-        "platformAccountId": "cba321",
-        "platformAPIKey": "zyx123",
-        "id": 1
-      }
-    },
-    "lock": {
-      "versionId": 1,
-      "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2],\"children\":[]}}"
-    },
-    "payload": {
-      "id": 2,
-      "platformAccountId": "cba321",
-      "platformAPIKey": "zyx123",
-      "versionId": 1,
-      "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2],\"children\":[]}}"
-    }
-  }
+	"eventType": "AcknowledgedAccountUpdate",
+	"data": {
+		"request": {
+			"eventType": "RequestedAccountUpdate",
+			"messageId": 2,
+			"lastReadVersionId": 1,
+			"data": {
+				"platform": "Alpaca",
+				"platformAccountId": "uyt321",
+				"platformAPIKey": "bnm123",
+				"id": 1
+			}
+		},
+		"payload": {
+			"lock": {
+				"versionId": 2,
+				"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2,2],\"children\":[]}}"
+			},
+			"object": {
+				"id": 1,
+				"platformAccountId": "uyt321",
+				"platformAPIKey": "bnm123"
+			}
+		}
+	}
 }
 ```
 
@@ -212,25 +217,27 @@
 
 ```
 {
-  "eventType": "RejectedAccountUpdate",
-  "data": {
-    "request": {
-      "eventType": "RequestedAccountUpdate",
-      "messageId": 2,
-      "lastReadVersionId": 1,
-      "data": {
-        "platform": "Alpaca",
-        "platformAccountId": "cba321",
-        "platformAPIKey": "zyx123",
-        "id": 1
-      }
-    },
-    "lock": {
-      "versionId": 0,
-      "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2],\"children\":[]}}"
-    },
-    "reason": "Existing Lock versionId 0 !== message lastReadVersionId 1"
-  }
+	"eventType": "RejectedAccountUpdate",
+	"data": {
+		"request": {
+			"eventType": "RequestedAccountUpdate",
+			"messageId": 2,
+			"lastReadVersionId": 1,
+			"data": {
+				"platform": "Alpaca",
+				"platformAccountId": "cba321",
+				"platformAPIKey": "zyx123",
+				"id": 1
+			}
+		},
+		"payload": {
+			"lock": {
+				"versionId": 2,
+				"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2,2],\"children\":[]}}"
+			}
+		},
+		"reason": "Existing Lock versionId 2 !== message lastReadVersionId 1"
+	}
 }
 ```
 
@@ -238,8 +245,70 @@
 
 #### Request
 
+```
+{
+	"eventType": "RequestedAccountDelete",
+	"messageId": 2,
+	"lastReadVersionId": 1,
+	"data": {
+		"id": 1
+	}
+}
+```
+
 #### Response
 
 ##### AcknowledgedAccountDelete
 
+```
+{
+  "eventType": "AcknowledgedAccountDelete",
+  "data": {
+    "request": {
+      "eventType": "RequestedAccountDelete",
+      "messageId": 2,
+      "lastReadVersionId": 2,
+      "data": {
+        "id": 1
+      }
+    },
+    "payload": {
+      "lock": {
+        "versionId": 3,
+        "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2,2,2],\"children\":[]}}"
+      },
+      "object": {
+        "id": 1,
+        "platformAccountId": "uyt321",
+        "platformAPIKey": "bnm123"
+      }
+    }
+  }
+}
+```
+
 ##### RejectedAccountDelete
+
+```
+{
+	"eventType": "RejectedAccountDelete",
+	"data": {
+		"request": {
+			"eventType": "RequestedAccountDelete",
+			"messageId": 2,
+			"lastReadVersionId": 1,
+			"data": {
+				"id": 1
+			}
+		},
+		"payload": {
+			"lock": {
+				"versionId": 2,
+				"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2,2],\"children\":[]}}"
+			}
+		},
+		"reason": "Existing Lock versionId 2 !== message lastReadVersionId 1"
+	}
+}
+
+```
