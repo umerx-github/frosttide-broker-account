@@ -26,13 +26,14 @@
 		"payload": [
 			{
 				"lock": {
-					"versionId": 0,
-					"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2],\"children\":[]}}"
+					"versionId": 3,
+					"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2,2,2],\"children\":[]}}"
 				},
 				"object": {
 					"id": 1,
-					"platformAccountId": "abc123",
-					"platformAPIKey": "xyz321"
+					"recordStatus": "DELETED",
+					"platformAccountId": "uyt321",
+					"platformAPIKey": "bnm123"
 				}
 			},
 			{
@@ -42,6 +43,7 @@
 				},
 				"object": {
 					"id": 2,
+					"recordStatus": "ACTIVE",
 					"platformAccountId": "qwe456",
 					"platformAPIKey": "645rty"
 				}
@@ -49,6 +51,7 @@
 		]
 	}
 }
+
 ```
 
 ##### RejectedAccountList
@@ -128,6 +131,7 @@
 			},
 			"object": {
 				"id": 1,
+				"recordStatus": "ACTIVE",
 				"platformAccountId": "abc123",
 				"platformAPIKey": "xyz321"
 			}
@@ -205,6 +209,7 @@
 			},
 			"object": {
 				"id": 1,
+				"recordStatus": "ACTIVE",
 				"platformAccountId": "uyt321",
 				"platformAPIKey": "bnm123"
 			}
@@ -238,6 +243,32 @@
 		},
 		"reason": "Existing Lock versionId 2 !== message lastReadVersionId 1"
 	}
+}
+```
+
+```
+{
+  "eventType": "RejectedAccountUpdate",
+  "data": {
+    "request": {
+      "eventType": "RequestedAccountUpdate",
+      "messageId": 2,
+      "lastReadVersionId": 1,
+      "data": {
+        "platform": "Alpaca",
+        "platformAccountId": "cba321",
+        "platformAPIKey": "zyx123",
+        "id": 2
+      }
+    },
+    "payload": {
+      "lock": {
+        "versionId": 1,
+        "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2],\"children\":[]}}"
+      }
+    },
+    "reason": "Record is immutable with recordStatus: DELETED"
+  }
 }
 ```
 
@@ -279,6 +310,7 @@
       },
       "object": {
         "id": 1,
+		"recordStatus": "DELETED",
         "platformAccountId": "uyt321",
         "platformAPIKey": "bnm123"
       }
@@ -310,5 +342,27 @@
 		"reason": "Existing Lock versionId 2 !== message lastReadVersionId 1"
 	}
 }
+```
 
+```
+{
+  "eventType": "RejectedAccountDelete",
+  "data": {
+    "request": {
+      "eventType": "RequestedAccountDelete",
+      "messageId": 2,
+      "lastReadVersionId": 2,
+      "data": {
+        "id": 2
+      }
+    },
+    "payload": {
+      "lock": {
+        "versionId": 1,
+        "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2],\"children\":[]}}"
+      }
+    },
+    "reason": "Record is immutable with recordStatus: DELETED"
+  }
+}
 ```

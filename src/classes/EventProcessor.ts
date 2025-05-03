@@ -5,7 +5,6 @@ import { inputSchema } from '../schemas/inputSchema.js';
 import { Kysely } from 'kysely';
 import {
     createAccountAlpaca,
-    deleteAccountAlpacaById,
     findAccountAlpacaById,
     listAccountAlpaca,
     updateAccountAlpacaById,
@@ -15,6 +14,7 @@ import { findLockByName, upsertLock } from '../models/lockTable.js';
 import { BTree } from '@umerx/btreejs';
 import { btreeSchema } from '../schemas/btree.js';
 import StaleWrite from '../exceptions/StaleWrite.js';
+import ImmutableRecord from '../exceptions/ImmutableRecord.js';
 
 interface EventProcessorProps<DatabaseType> {
     db: Kysely<DatabaseType>;
@@ -194,9 +194,8 @@ export default class EventProcessor {
                                 validInputMessageValueData.lastReadVersionId
                             ) {
                                 throw new StaleWrite(
-                                    `Existing Lock versionId ${lockObject?.versionId} !== message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`,
+                                    `Existing lock versionId ${lockObject?.versionId} !== message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`,
                                     {
-                                        name: 'RequestedAccountCreate',
                                         versionId: lockExistingVersionId,
                                         proofOfInclusionBTreeSerialized:
                                             lockExistingProofOfInclusionBTree
@@ -325,6 +324,16 @@ export default class EventProcessor {
                                 trx,
                                 validInputMessageValueData.data.id
                             );
+                            if (dbObject?.recordStatus === 'DELETED') {
+                                throw new ImmutableRecord(
+                                    `Record is immutable with recordStatus: ${dbObject.recordStatus}`,
+                                    {
+                                        versionId: dbObject.versionId,
+                                        proofOfInclusionBTreeSerialized:
+                                            dbObject.proofOfInclusionBTreeSerialized,
+                                    }
+                                );
+                            }
                             const lockExistingVersionId =
                                 dbObject?.versionId ?? null;
                             const lockExistingProofOfInclusionBTree =
@@ -343,9 +352,8 @@ export default class EventProcessor {
                                 validInputMessageValueData.lastReadVersionId
                             ) {
                                 throw new StaleWrite(
-                                    `Existing Lock versionId ${dbObject?.versionId} !== message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`,
+                                    `Existing lock versionId ${dbObject?.versionId} !== message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`,
                                     {
-                                        name: 'RequestedAccountUpdate',
                                         versionId: lockExistingVersionId,
                                         proofOfInclusionBTreeSerialized:
                                             lockExistingProofOfInclusionBTree
@@ -413,7 +421,10 @@ export default class EventProcessor {
                         }),
                     });
                 } catch (e) {
-                    if (e instanceof StaleWrite) {
+                    if (
+                        e instanceof StaleWrite ||
+                        e instanceof ImmutableRecord
+                    ) {
                         await this.producer.sendMessage({
                             key: 'myKey',
                             value: JSON.stringify({
@@ -466,6 +477,16 @@ export default class EventProcessor {
                                 trx,
                                 validInputMessageValueData.data.id
                             );
+                            if (dbObject?.recordStatus === 'DELETED') {
+                                throw new ImmutableRecord(
+                                    `Record is immutable with recordStatus: ${dbObject.recordStatus}`,
+                                    {
+                                        versionId: dbObject.versionId,
+                                        proofOfInclusionBTreeSerialized:
+                                            dbObject.proofOfInclusionBTreeSerialized,
+                                    }
+                                );
+                            }
                             const lockExistingVersionId =
                                 dbObject?.versionId ?? null;
                             const lockExistingProofOfInclusionBTree =
@@ -484,9 +505,8 @@ export default class EventProcessor {
                                 validInputMessageValueData.lastReadVersionId
                             ) {
                                 throw new StaleWrite(
-                                    `Existing Lock versionId ${dbObject?.versionId} !== message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`,
+                                    `Existing lock versionId ${dbObject?.versionId} !== message lastReadVersionId ${validInputMessageValueData.lastReadVersionId}`,
                                     {
-                                        name: 'RequestedAccountUpdate',
                                         versionId: lockExistingVersionId,
                                         proofOfInclusionBTreeSerialized:
                                             lockExistingProofOfInclusionBTree
@@ -549,7 +569,10 @@ export default class EventProcessor {
                         }),
                     });
                 } catch (e) {
-                    if (e instanceof StaleWrite) {
+                    if (
+                        e instanceof StaleWrite ||
+                        e instanceof ImmutableRecord
+                    ) {
                         await this.producer.sendMessage({
                             key: 'myKey',
                             value: JSON.stringify({
