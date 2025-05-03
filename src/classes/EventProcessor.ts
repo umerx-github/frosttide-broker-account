@@ -79,6 +79,7 @@ export default class EventProcessor {
                                         },
                                         object: {
                                             id: dbObject.id,
+                                            recordStatus: dbObject.recordStatus,
                                             platformAccountId:
                                                 dbObject.platformAccountId,
                                             platformAPIKey:
@@ -266,6 +267,7 @@ export default class EventProcessor {
                                     },
                                     object: {
                                         id: dbObject.id,
+                                        recordStatus: dbObject.recordStatus,
                                         platformAccountId:
                                             dbObject.platformAccountId,
                                         platformAPIKey: dbObject.platformAPIKey,
@@ -401,6 +403,7 @@ export default class EventProcessor {
                                     },
                                     object: {
                                         id: dbObject.id,
+                                        recordStatus: dbObject.recordStatus,
                                         platformAccountId:
                                             dbObject.platformAccountId,
                                         platformAPIKey: dbObject.platformAPIKey,
@@ -536,6 +539,7 @@ export default class EventProcessor {
                                     },
                                     object: {
                                         id: dbObject.id,
+                                        recordStatus: dbObject.recordStatus,
                                         platformAccountId:
                                             dbObject.platformAccountId,
                                         platformAPIKey: dbObject.platformAPIKey,
