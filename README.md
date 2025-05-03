@@ -248,27 +248,27 @@
 
 ```
 {
-  "eventType": "RejectedAccountUpdate",
-  "data": {
-    "request": {
-      "eventType": "RequestedAccountUpdate",
-      "messageId": 2,
-      "lastReadVersionId": 1,
-      "data": {
-        "platform": "Alpaca",
-        "platformAccountId": "cba321",
-        "platformAPIKey": "zyx123",
-        "id": 2
-      }
-    },
-    "payload": {
-      "lock": {
-        "versionId": 1,
-        "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2],\"children\":[]}}"
-      }
-    },
-    "reason": "Record is immutable with recordStatus: DELETED"
-  }
+	"eventType": "RejectedAccountUpdate",
+	"data": {
+		"request": {
+			"eventType": "RequestedAccountUpdate",
+			"messageId": 2,
+			"lastReadVersionId": 1,
+			"data": {
+				"platform": "Alpaca",
+				"platformAccountId": "cba321",
+				"platformAPIKey": "zyx123",
+				"id": 2
+			}
+		},
+		"payload": {
+			"lock": {
+				"versionId": 1,
+				"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2],\"children\":[]}}"
+			}
+		},
+		"reason": "Record is immutable with recordStatus: DELETED"
+	}
 }
 ```
 
@@ -346,23 +346,23 @@
 
 ```
 {
-  "eventType": "RejectedAccountDelete",
-  "data": {
-    "request": {
-      "eventType": "RequestedAccountDelete",
-      "messageId": 2,
-      "lastReadVersionId": 2,
-      "data": {
-        "id": 2
-      }
-    },
-    "payload": {
-      "lock": {
-        "versionId": 1,
-        "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2],\"children\":[]}}"
-      }
-    },
-    "reason": "Record is immutable with recordStatus: DELETED"
-  }
+	"eventType": "RejectedAccountDelete",
+	"data": {
+		"request": {
+			"eventType": "RequestedAccountDelete",
+			"messageId": 2,
+			"lastReadVersionId": 2,
+			"data": {
+				"id": 2
+			}
+		},
+		"payload": {
+			"lock": {
+				"versionId": 1,
+				"proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[2,2],\"children\":[]}}"
+			}
+		},
+		"reason": "Record is immutable with recordStatus: DELETED"
+	}
 }
 ```
