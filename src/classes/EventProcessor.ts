@@ -213,9 +213,11 @@ export default class EventProcessor {
                             const lockProofOfInclusionBTree =
                                 lockExistingProofOfInclusionBTree ??
                                 new BTree(3);
-                            lockProofOfInclusionBTree.insert(
-                                validInputMessageValueData.messageId
-                            );
+                            if (!lockProofOfInclusionBTree.contains(validInputMessageValueData.messageId)) {
+                                lockProofOfInclusionBTree.insert(
+                                    validInputMessageValueData.messageId
+                                );
+                            }
                             const lockProofOfInclusionBTreeSerialized =
                                 JSON.stringify(lockProofOfInclusionBTree);
                             const dbObjectBTree = new BTree(3);
@@ -371,9 +373,11 @@ export default class EventProcessor {
                             const lockProofOfInclusionBTree =
                                 lockExistingProofOfInclusionBTree ??
                                 new BTree(3);
-                            lockProofOfInclusionBTree.insert(
-                                validInputMessageValueData.messageId
-                            );
+                            if (!lockProofOfInclusionBTree.contains(validInputMessageValueData.messageId)) {
+                                lockProofOfInclusionBTree.insert(
+                                    validInputMessageValueData.messageId
+                                );
+                            }
                             const lockProofOfInclusionBTreeSerialized =
                                 JSON.stringify(lockProofOfInclusionBTree);
                             const objectToInsert = {
@@ -524,9 +528,11 @@ export default class EventProcessor {
                             const lockProofOfInclusionBTree =
                                 lockExistingProofOfInclusionBTree ??
                                 new BTree(3);
-                            lockProofOfInclusionBTree.insert(
-                                validInputMessageValueData.messageId
-                            );
+                            if (!lockProofOfInclusionBTree.contains(validInputMessageValueData.messageId)) {
+                                lockProofOfInclusionBTree.insert(
+                                    validInputMessageValueData.messageId
+                                );
+                            }
                             const lockProofOfInclusionBTreeSerialized =
                                 JSON.stringify(lockProofOfInclusionBTree);
                             dbObject = await updateAccountAlpacaById(
