@@ -366,3 +366,62 @@
 	}
 }
 ```
+
+## Tests
+
+### Debugging the Tests
+
+#### Serialization
+
+> [!TIP]
+> This method can be helpful if you are having trouble formatting the JSON in the tests.
+
+```
+AssertionError: expected sendMessage to have been called with arguments {}
+{ key: 'myKey',
+  value: '{"eventType":"AcknowledgedAccountCreate","data":{"request":{"eventType":"RequestedAccountCreate","messageId":3,"lastReadVersionId":1,"data":{"platform":"Alpaca","platformAccountId":"abc123","platformAPIKey":"xyz321"}},"lock":{"versionId":2,"proofOfInclusionBTreeSerialized":"{\\"t\\":3,\\"root\\":{\\"isLeaf\\":true,\\"keys\\":[1,3],\\"children\\":[]}}"},"payload":{"lock":{"versionId":0,"proofOfInclusionBTreeSerialized":"{\\"t\\":3,\\"root\\":{\\"isLeaf\\":true,\\"keys\\":[3],\\"children\\":[]}}"},"object":{"id":3,"recordStatus":"ACTIVE","platformAccountId":"abc123","platformAPIKey":"xyz321"}}}}' } {}
+```
+
+To add the output to your test, you can copy the JSON string from `value` and format it like so:
+
+```
+const myJSONString = '{"eventType":"AcknowledgedAccountCreate","data":{"request":{"eventType":"RequestedAccountCreate","messageId":3,"lastReadVersionId":1,"data":{"platform":"Alpaca","platformAccountId":"abc123","platformAPIKey":"xyz321"}},"lock":{"versionId":2,"proofOfInclusionBTreeSerialized":"{\\"t\\":3,\\"root\\":{\\"isLeaf\\":true,\\"keys\\":[1,3],\\"children\\":[]}}"},"payload":{"lock":{"versionId":0,"proofOfInclusionBTreeSerialized":"{\\"t\\":3,\\"root\\":{\\"isLeaf\\":true,\\"keys\\":[3],\\"children\\":[]}}"},"object":{"id":3,"recordStatus":"ACTIVE","platformAccountId":"abc123","platformAPIKey":"xyz321"}}}}';
+
+console.log(JSON.stringify(JSON.parse(myJSONString),null, 2));
+```
+
+This will print something like:
+
+```
+{
+  "eventType": "AcknowledgedAccountCreate",
+  "data": {
+    "request": {
+      "eventType": "RequestedAccountCreate",
+      "messageId": 3,
+      "lastReadVersionId": 1,
+      "data": {
+        "platform": "Alpaca",
+        "platformAccountId": "abc123",
+        "platformAPIKey": "xyz321"
+      }
+    },
+    "lock": {
+      "versionId": 2,
+      "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[1,3],\"children\":[]}}"
+    },
+    "payload": {
+      "lock": {
+        "versionId": 0,
+        "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":true,\"keys\":[3],\"children\":[]}}"
+      },
+      "object": {
+        "id": 3,
+        "recordStatus": "ACTIVE",
+        "platformAccountId": "abc123",
+        "platformAPIKey": "xyz321"
+      }
+    }
+  }
+}
+```
