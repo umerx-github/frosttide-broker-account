@@ -382,6 +382,8 @@ AssertionError: expected sendMessage to have been called with arguments {}
   value: '{"eventType":"AcknowledgedAccountCreate","data":{"request":{"eventType":"RequestedAccountCreate","messageId":3,"lastReadVersionId":1,"data":{"platform":"Alpaca","platformAccountId":"abc123","platformAPIKey":"xyz321"}},"lock":{"versionId":2,"proofOfInclusionBTreeSerialized":"{\\"t\\":3,\\"root\\":{\\"isLeaf\\":true,\\"keys\\":[1,3],\\"children\\":[]}}"},"payload":{"lock":{"versionId":0,"proofOfInclusionBTreeSerialized":"{\\"t\\":3,\\"root\\":{\\"isLeaf\\":true,\\"keys\\":[3],\\"children\\":[]}}"},"object":{"id":3,"recordStatus":"ACTIVE","platformAccountId":"abc123","platformAPIKey":"xyz321"}}}}' } {}
 ```
 
+Look for the 2nd instance of `value`.
+
 To add the output to your test, you can copy the JSON string from `value` and format it like so:
 
 ```
