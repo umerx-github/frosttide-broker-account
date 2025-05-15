@@ -191,5 +191,46 @@ describe('EventProcessor', () => {
                 }
             })
         });
-    })
+    });
+    it('handles RequestedAccountDelete', async () => {
+        const { producer, eventProcessor } = getDependencies();
+        await eventProcessor.processEvent({
+            value: Buffer.from(JSON.stringify({
+                eventType: "RequestedAccountDelete",
+                messageId: 3,
+                lastReadVersionId: 0,
+                data: {
+                    id: 1
+                }
+            }))
+        });
+        expect(producer.sendMessage).to.have.been.calledWith({
+            key: 'myKey',
+            value: JSON.stringify({
+                "eventType": "AcknowledgedAccountDelete",
+                "data": {
+                    "request": {
+                        "eventType": "RequestedAccountDelete",
+                        "messageId": 3,
+                        "lastReadVersionId": 0,
+                        "data": {
+                            "id": 1
+                        }
+                    },
+                    "payload": {
+                        "lock": {
+                            "versionId": 1,
+                            "proofOfInclusionBTreeSerialized": "{\"t\":3,\"root\":{\"isLeaf\":false,\"keys\":[4],\"children\":[{\"isLeaf\":true,\"keys\":[2,3],\"children\":[]},{\"isLeaf\":true,\"keys\":[5,6,7],\"children\":[]}]}}"
+                        },
+                        "object": {
+                            "id": 1,
+                            "recordStatus": "DELETED",
+                            "platformAccountId": "qwe456",
+                            "platformAPIKey": "645rty"
+                        }
+                    }
+                }
+            })
+        });
+    });
 });
