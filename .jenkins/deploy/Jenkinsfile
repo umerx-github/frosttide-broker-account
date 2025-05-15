@@ -31,6 +31,8 @@ pipeline {
         stage('Test') {
             agent any
             steps {
+                cleanWs()
+                checkout scm
                 script {
                     // Launch the MySQL container with the specific network
                     docker.image('mysql:8.2.0').withRun('--name "${BUILD_TAG}_db" -e "MYSQL_ROOT_PASSWORD=db" -e "MYSQL_DATABASE=db" -e "MYSQL_USER=db" -e "MYSQL_PASSWORD=db"') { mysqlContainer ->
@@ -141,6 +143,11 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+    post {
+        always {
+            cleanWs(notFailBuild: true)
         }
     }
 }
