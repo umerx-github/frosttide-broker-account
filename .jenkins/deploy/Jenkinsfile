@@ -55,6 +55,11 @@ pipeline {
                     }
                 }
             }
+            post {
+                always {
+                    cleanWs(notFailBuild: true)
+                }
+            }
         }
         stage('Define vars') {
             agent any
@@ -94,6 +99,11 @@ pipeline {
                             }
                         }
                     }
+                    post {
+                        always {
+                            cleanWs(notFailBuild: true)
+                        }
+                    }
                 }
                 stage('Build for arm64') {
                     agent { label 'docker && arm64' }
@@ -109,6 +119,11 @@ pipeline {
                                 docker push ${GHCR_REGISTRY}/${GHCR_REPOSITORY}:${DYNAMIC_TAG_NAME}-arm64
                                 '''
                             }
+                        }
+                    }
+                    post {
+                        always {
+                            cleanWs(notFailBuild: true)
                         }
                     }
                 }
@@ -143,11 +158,6 @@ pipeline {
                     }
                 }
             }
-        }
-    }
-    post {
-        always {
-            cleanWs(notFailBuild: true)
         }
     }
 }
