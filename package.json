@@ -5,6 +5,7 @@
     "main": "index.js",
     "scripts": {
         "build": "tsc",
+        "connect": "node dist/scripts/connect.js",
         "test": "mocha --require ./dist/scripts/destroy.js",
         "test:dev": "npm run build && npm run test",
         "migrate:make": "cp ./dev/templates/migration.ts ./src/migrations/$(date -Iseconds).ts",
