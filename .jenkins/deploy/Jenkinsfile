@@ -33,11 +33,11 @@ pipeline {
             steps {
                 script {
                     // Launch the MySQL container with the specific network
-                    docker.image('mysql:8.2.0').withRun('-e "MYSQL_ROOT_PASSWORD=db" -e "MYSQL_DATABASE=db" -e "MYSQL_USER=db" -e "MYSQL_PASSWORD=db" --network="${BUILD_TAG}"') { mysqlContainer ->
+                    docker.image('mysql:8.2.0').withRun('-e "MYSQL_ROOT_PASSWORD=db" -e "MYSQL_DATABASE=db" -e "MYSQL_USER=db" -e "MYSQL_PASSWORD=db"') { mysqlContainer ->
                         // Authenticate with GitHub Container Registry (ghcr.io) and then pull the image
                         def myEnv = docker.build("${BUILD_TAG}", "./Dockerfile.test")
                         myEnv.inside(
-                            "--network=${BUILD_TAG} -e DB_HOSTNAME=db -e DB_NAME=db -e DB_USER=db -e DB_PASSWORD=db"
+                            "--link ${mysqlContainer.id} -e DB_HOSTNAME=db -e DB_NAME=db -e DB_USER=db -e DB_PASSWORD=db"
                         ) {
                             sh 'npm run build'
                             sh 'npm run seed'
